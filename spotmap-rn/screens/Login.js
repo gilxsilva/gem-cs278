@@ -1,43 +1,462 @@
-import React, { useState } from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+/**
+ * Login.js — gem welcome / sign-in screen
+ *
+ * Design language: Apple-inspired — clarity, restraint, premium spacing, flat depth.
+ *
+ * Structure (top → bottom):
+ *   BrandBlock          logo · wordmark · tagline
+ *   HeroSection         headline · rotating animated subtitle (300 ms, 3.2 s cycle)
+ *   GemPreviewCarousel  horizontal-snap cards · white surface · hairline border
+ *   LoginCTA (footer)   pinned · flat navy button · Stanford inline note
+ *
+ * Auth flow: Google OAuth via Supabase implicit flow — unchanged.
+ */
+
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  ScrollView,
+  Animated,
+  Dimensions,
+} from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../supabase';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 WebBrowser.maybeCompleteAuthSession();
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 
+const { width: SCREEN_W } = Dimensions.get('window');
+
+// ─── Design tokens ───────────────────────────────────────────────────────────
+// Three-level text opacity system, matching Apple's semantic text roles.
 const NAVY   = '#0D1F3C';
 const CREAM  = '#FAF7F2';
-const MUTED  = 'rgba(28,23,20,0.38)';
-const BORDER = 'rgba(28,23,20,0.09)';
+const CARD   = '#FFFFFF';
+const L1     = NAVY;                       // primary text
+const L2     = 'rgba(13,31,60,0.42)';      // secondary text
+const L3     = 'rgba(13,31,60,0.28)';      // tertiary / metadata
+const BORDER = 'rgba(13,31,60,0.08)';      // hairline surfaces
+const RED    = '#8C1515';                  // Stanford
 
-const BENEFITS = [
+// ─── Rotating copy ───────────────────────────────────────────────────────────
+const SUBLINES = [
+  'hidden spots your circle actually loves',
+  'places tied to real memories',
+  'trusted finds — not generic reviews',
+];
+
+// ─── Sample gem content ──────────────────────────────────────────────────────
+// Shows users what gem looks like before they sign up.
+// Each card models the correct norm: specific, moment-driven, from a real person.
+const GEMS = [
   {
-    icon: 'location-outline',
-    label: 'Hidden spots',
-    sub: 'Places your friends love but never post about',
+    id: '1',
+    emoji: '☕',
+    place: 'Coupa at Tresidder',
+    note:  'Best spot to actually focus. Way less crowded than CoHo after 2 pm.',
+    author: 'Maya',
   },
   {
-    icon: 'bookmark-outline',
-    label: 'Tied to moments',
-    sub: 'Each place carries a memory, not just a pin',
+    id: '2',
+    emoji: '🌿',
+    place: 'Garden behind Frost',
+    note:  'A hidden courtyard most people walk right past. Perfect quiet afternoon.',
+    author: 'James',
   },
   {
-    icon: 'people-outline',
-    label: 'Your circle',
-    sub: 'A map built by the people you actually trust',
+    id: '3',
+    emoji: '📖',
+    place: 'Green Library, 3rd floor',
+    note:  'Silent. Great natural light. Almost always empty after 8 pm.',
+    author: 'Priya',
+  },
+  {
+    id: '4',
+    emoji: '🌅',
+    place: 'Lake Lag at sunrise',
+    note:  'Worth the early alarm. Bring coffee. Go alone or with one person.',
+    author: 'Chris',
   },
 ];
 
-export default function Login({ onGuestLogin }) {
-  const [loading, setLoading] = useState(false);
+const CARD_W   = SCREEN_W * 0.72;
+const CARD_GAP = 10;
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BrandBlock
+// Logo → wordmark → tagline, centered, generous below.
+// ─────────────────────────────────────────────────────────────────────────────
+function BrandBlock() {
+  return (
+    <View style={bs.wrap}>
+      <Image source={require('../assets/logo.png')} style={bs.logo} />
+      <Text style={bs.wordmark}>gem</Text>
+      <Text style={bs.tagline}>places worth remembering</Text>
+    </View>
+  );
+}
+
+const bs = StyleSheet.create({
+  wrap: {
+    alignItems: 'center',
+    marginBottom: 38,
+  },
+  logo: {
+    width: 68,
+    height: 68,
+    borderRadius: 17,          // ~1/4 of size — Apple's app icon radius proportion
+    marginBottom: 14,
+  },
+  wordmark: {
+    fontSize: 27,
+    fontWeight: '600',          // semibold, not black — confident without shouting
+    color: L1,
+    letterSpacing: -1.2,
+    marginBottom: 5,
+  },
+  tagline: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: L2,
+    letterSpacing: 0.3,
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HeroSection
+// Bold headline + animated rotating subtitle.
+// Timing: 300 ms fade (Apple standard), 3.2 s cycle.
+// ─────────────────────────────────────────────────────────────────────────────
+function HeroSection() {
+  const [idx, setIdx]   = useState(0);
+  const opacity         = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const cycle = setInterval(() => {
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        setIdx(i => (i + 1) % SUBLINES.length);
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, 3200);
+    return () => clearInterval(cycle);
+  }, [opacity]);
+
+  return (
+    <View style={hs.wrap}>
+      <Text style={hs.headline}>
+        discover the spots{'\n'}your friends actually love
+      </Text>
+      <Animated.Text style={[hs.subline, { opacity }]}>
+        {SUBLINES[idx]}
+      </Animated.Text>
+    </View>
+  );
+}
+
+const hs = StyleSheet.create({
+  wrap: {
+    alignItems: 'center',
+    marginBottom: 40,
+    paddingHorizontal: 28,
+  },
+  headline: {
+    fontSize: 27,
+    fontWeight: '700',          // display weight — the one place we go full bold
+    color: L1,
+    textAlign: 'center',
+    lineHeight: 34,
+    letterSpacing: -0.9,
+    marginBottom: 12,
+  },
+  subline: {
+    fontSize: 15,
+    fontWeight: '400',          // regular — supports without competing
+    color: L2,
+    textAlign: 'center',
+    letterSpacing: 0,
+    lineHeight: 21,
+    minHeight: 21,              // prevents layout shift during crossfade
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GemCard
+// White surface · hairline border · Apple-level shadow (0.04 opacity).
+// Three-level type hierarchy inside the card.
+// ─────────────────────────────────────────────────────────────────────────────
+function GemCard({ item }) {
+  return (
+    <View style={gc.card}>
+
+      {/* Place header */}
+      <View style={gc.header}>
+        <View style={gc.emojiWrap}>
+          <Text style={gc.emoji}>{item.emoji}</Text>
+        </View>
+        <View style={gc.titleBlock}>
+          <Text style={gc.place} numberOfLines={1}>{item.place}</Text>
+          <Text style={gc.gemLabel}>gem</Text>
+        </View>
+      </View>
+
+      {/* Memory note */}
+      <Text style={gc.note} numberOfLines={2}>{item.note}</Text>
+
+      {/* Attribution */}
+      <View style={gc.footer}>
+        <View style={gc.avatar} />
+        <Text style={gc.author}>saved by {item.author}</Text>
+      </View>
+
+    </View>
+  );
+}
+
+const gc = StyleSheet.create({
+  card: {
+    width: CARD_W,
+    marginRight: CARD_GAP,
+    backgroundColor: CARD,
+    borderRadius: 16,                       // Apple content-card radius
+    padding: 18,
+    borderWidth: StyleSheet.hairlineWidth,  // 0.5 on Retina — Apple-standard
+    borderColor: BORDER,
+    // Apple-level depth: barely perceptible, lets the surface breathe
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 11,
+  },
+  emojiWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 11,
+    backgroundColor: CREAM,                 // cream-on-white = Apple's grouped table feel
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  emoji: { fontSize: 20 },
+  titleBlock: { flex: 1 },
+  place: {
+    fontSize: 15,
+    fontWeight: '600',                      // semibold — consistent with Apple cells
+    color: L1,
+    letterSpacing: -0.3,
+    marginBottom: 2,
+  },
+  gemLabel: {
+    fontSize: 11,
+    fontWeight: '400',
+    color: L3,
+    letterSpacing: 0.2,
+  },
+  note: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: L2,
+    lineHeight: 19,
+    letterSpacing: -0.1,
+    marginBottom: 14,
+  },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 7,
+  },
+  avatar: {
+    width: 15,
+    height: 15,
+    borderRadius: 7.5,
+    backgroundColor: BORDER,
+  },
+  author: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: L3,
+    letterSpacing: 0.1,
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GemPreviewCarousel
+// Horizontal snap scroll. Section label follows Apple's grouped-section style.
+// ─────────────────────────────────────────────────────────────────────────────
+function GemPreviewCarousel() {
+  return (
+    <View>
+      <Text style={cc.label}>what a gem looks like</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={cc.content}
+        snapToInterval={CARD_W + CARD_GAP}
+        decelerationRate="fast"
+        overScrollMode="never"
+      >
+        {GEMS.map(item => <GemCard key={item.id} item={item} />)}
+        <View style={{ width: 28 }} />
+      </ScrollView>
+    </View>
+  );
+}
+
+const cc = StyleSheet.create({
+  label: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: L3,
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 13,
+    paddingHorizontal: 28,
+  },
+  content: {
+    paddingLeft: 28,
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// LoginCTA  (pinned footer)
+// Flat navy button — color carries the weight, no shadow needed.
+// Footer casts a soft upward shadow for separation from scroll content.
+// ─────────────────────────────────────────────────────────────────────────────
+function LoginCTA({ onPress, loading }) {
+  return (
+    <View style={cs.footer}>
+
+      <TouchableOpacity
+        style={[cs.btn, loading && cs.btnLoading]}
+        onPress={onPress}
+        activeOpacity={0.84}
+        disabled={loading}
+      >
+        {loading ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <>
+            <View style={cs.gBadge}>
+              <Text style={cs.gGlyph}>G</Text>
+            </View>
+            <Text style={cs.btnLabel}>Sign in with Google</Text>
+          </>
+        )}
+      </TouchableOpacity>
+
+      <Text style={cs.note}>
+        Use your{' '}
+        <Text style={cs.noteAccent}>@stanford.edu</Text>
+        {' '}account to join your campus circle
+      </Text>
+
+    </View>
+  );
+}
+
+const cs = StyleSheet.create({
+  footer: {
+    paddingHorizontal: 24,
+    paddingTop: 18,
+    paddingBottom: 6,
+    alignItems: 'center',
+    gap: 14,
+    backgroundColor: CREAM,
+    // Soft upward shadow — separates footer from scroll without a hard line
+    shadowColor: '#000',
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: -4 },
+  },
+  btn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: NAVY,
+    borderRadius: 14,
+    paddingVertical: 18,        // taller tap target — Apple minimum is 44pt
+    width: '100%',
+    // Flat — no shadow. The navy-on-cream contrast is the affordance.
+  },
+  btnLoading: {
+    opacity: 0.55,
+  },
+  gBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gGlyph: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#4285F4',
+    letterSpacing: -0.2,
+  },
+  btnLabel: {
+    fontSize: 17,               // Apple's standard interactive label size
+    fontWeight: '600',          // semibold — confident, not heavy
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
+  },
+  note: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: L2,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  noteAccent: {
+    fontWeight: '600',
+    color: RED,
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Login  (root)
+// Screen fades in on mount (500 ms) — Apple's graceful appearance pattern.
+// Auth flow: Google OAuth via Supabase, unchanged.
+// ─────────────────────────────────────────────────────────────────────────────
+export default function Login() {
+  const [loading, setLoading]   = useState(false);
+  const screenOpacity           = useRef(new Animated.Value(0)).current;
+
+  // Gentle fade-in on first render
+  useEffect(() => {
+    Animated.timing(screenOpacity, {
+      toValue: 1,
+      duration: 480,
+      useNativeDriver: true,
+    }).start();
+  }, [screenOpacity]);
 
   const handleGoogleLogin = async () => {
     if (loading) return;
     setLoading(true);
     try {
-      // Dismiss any stale browser session before opening a new one
       WebBrowser.dismissAuthSession();
 
       const redirectTo = 'gem://';
@@ -65,7 +484,7 @@ export default function Login({ onGuestLogin }) {
             refresh_token: params.refresh_token,
           });
           if (sessionError) Alert.alert('Sign-in error', sessionError.message);
-          // onAuthStateChange in App.js picks up the session automatically
+          // onAuthStateChange in App.js handles the rest
         } else {
           Alert.alert('Sign-in error', 'No tokens received. Please try again.');
         }
@@ -78,232 +497,41 @@ export default function Login({ onGuestLogin }) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={root.safe}>
+      <Animated.View style={[root.body, { opacity: screenOpacity }]}>
 
-      {/* ── Brand cluster ──────────────────────────────────── */}
-      <View style={styles.brandCluster}>
-        <Image source={require('../assets/logo.png')} style={styles.logoImage} />
-        <View style={styles.rule} />
-        <Text style={styles.tagline}>places worth remembering</Text>
-      </View>
-
-      {/* ── Headline ───────────────────────────────────────── */}
-      <View style={styles.headlineWrap}>
-        <Text style={styles.headline}>
-          discover the spots{'\n'}your friends actually love
-        </Text>
-      </View>
-
-      {/* ── Benefits card ──────────────────────────────────── */}
-      <View style={styles.benefitsCard}>
-        {BENEFITS.map((b, i) => (
-          <React.Fragment key={b.label}>
-            {i > 0 && <View style={styles.benefitDivider} />}
-            <View style={styles.benefitRow}>
-              <View style={styles.benefitIconWrap}>
-                <Ionicons name={b.icon} size={18} color={NAVY} />
-              </View>
-              <View style={styles.benefitText}>
-                <Text style={styles.benefitLabel}>{b.label}</Text>
-                <Text style={styles.benefitSub}>{b.sub}</Text>
-              </View>
-            </View>
-          </React.Fragment>
-        ))}
-      </View>
-
-      {/* ── Flex spacer ────────────────────────────────────── */}
-      <View style={{ flex: 1 }} />
-
-      {/* ── CTA section ────────────────────────────────────── */}
-      <View style={styles.ctaSection}>
-        <TouchableOpacity
-          style={[styles.googleBtn, loading && { opacity: 0.6 }]}
-          onPress={handleGoogleLogin}
-          activeOpacity={0.82}
-          disabled={loading}
+        {/* Scrollable content — brand, hero, cards */}
+        <ScrollView
+          style={root.scroll}
+          contentContainerStyle={root.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          {loading ? (
-            <ActivityIndicator size="small" color={NAVY} />
-          ) : (
-            <>
-              <View style={styles.googleGCircle}>
-                <Text style={styles.googleGText}>G</Text>
-              </View>
-              <Text style={styles.googleBtnText}>Continue with Google</Text>
-            </>
-          )}
-        </TouchableOpacity>
+          <BrandBlock />
+          <HeroSection />
+          <GemPreviewCarousel />
+        </ScrollView>
 
-        <TouchableOpacity
-          style={styles.guestBtn}
-          onPress={onGuestLogin}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.guestText}>browse without an account</Text>
-          <Ionicons name="chevron-forward" size={13} color={MUTED} />
-        </TouchableOpacity>
+        {/* Pinned footer — always in view */}
+        <LoginCTA onPress={handleGoogleLogin} loading={loading} />
 
-        <Text style={styles.trustCopy}>No account needed to explore</Text>
-      </View>
+      </Animated.View>
     </SafeAreaView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const root = StyleSheet.create({
+  safe: {
     flex: 1,
     backgroundColor: CREAM,
-    paddingHorizontal: 28,
-    paddingTop: 32,
-    paddingBottom: 20,
   },
-
-  // Brand cluster
-  brandCluster: {
-    alignItems: 'center',
-    marginTop: 16,
-    marginBottom: 36,
+  body: {
+    flex: 1,
   },
-  logoImage: {
-    width: 96,
-    height: 96,
-    borderRadius: 22,
-    marginBottom: 4,
+  scroll: {
+    flex: 1,
   },
-  rule: {
-    width: 32,
-    height: 2,
-    backgroundColor: NAVY,
-    opacity: 0.15,
-    borderRadius: 1,
-    marginTop: 14,
-    marginBottom: 12,
-  },
-  tagline: {
-    fontSize: 13,
-    color: MUTED,
-    letterSpacing: 0.4,
-  },
-
-  // Headline
-  headlineWrap: {
-    alignItems: 'center',
-    marginBottom: 28,
-  },
-  headline: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: NAVY,
-    textAlign: 'center',
-    lineHeight: 30,
-    letterSpacing: -0.5,
-  },
-
-  // Benefits
-  benefitsCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: BORDER,
-    paddingVertical: 4,
-    shadowColor: '#1C1714',
-    shadowOpacity: 0.05,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 4 },
-    elevation: 2,
-  },
-  benefitRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  benefitIconWrap: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: 'rgba(45,63,92,0.07)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  benefitText: { flex: 1 },
-  benefitLabel: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: NAVY,
-    marginBottom: 2,
-    letterSpacing: -0.2,
-  },
-  benefitSub: {
-    fontSize: 12,
-    color: MUTED,
-    lineHeight: 17,
-  },
-  benefitDivider: {
-    height: 1,
-    backgroundColor: BORDER,
-    marginHorizontal: 20,
-  },
-
-  // CTA
-  ctaSection: {
-    width: '100%',
-    alignItems: 'center',
-    gap: 14,
-  },
-  googleBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 15,
-    width: '100%',
-    borderWidth: 1.5,
-    borderColor: BORDER,
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 2,
-  },
-  googleGCircle: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#4285F4',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  googleGText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.3,
-  },
-  googleBtnText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: NAVY,
-    letterSpacing: -0.2,
-  },
-  guestBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    paddingVertical: 4,
-  },
-  guestText: {
-    fontSize: 14,
-    color: MUTED,
-  },
-  trustCopy: {
-    fontSize: 11,
-    color: 'rgba(28,23,20,0.25)',
-    letterSpacing: 0.2,
-    marginTop: -4,
+  scrollContent: {
+    paddingTop: 28,
+    paddingBottom: 12,
   },
 });
