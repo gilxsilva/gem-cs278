@@ -109,6 +109,12 @@ export default function App() {
       });
   }, [user?.uid]);
 
+  const refreshUser = async () => {
+    if (!user || user.uid === 'guest') return;
+    const { data } = await supabase.from('profiles').select('display_name, avatar_url, handle').eq('id', user.uid).single();
+    if (data) setUser(prev => prev ? { ...prev, displayName: data.display_name ?? prev.displayName, photoURL: data.avatar_url ?? prev.photoURL } : prev);
+  };
+
   // ── Onboarding check (runs whenever user identity changes) ─────────────────
   useEffect(() => {
     if (user === undefined) return; // still hydrating
@@ -168,7 +174,7 @@ export default function App() {
                 {props => <PinDetailScreen {...props} user={user} />}
               </Stack.Screen>
               <Stack.Screen name="Profile" options={{ animation: 'slide_from_right' }}>
-                {props => <ProfileScreen {...props} theme={theme} />}
+                {props => <ProfileScreen {...props} theme={theme} onProfileUpdate={refreshUser} />}
               </Stack.Screen>
               <Stack.Screen name="PostComments" options={{ animation: 'slide_from_bottom' }}>
                 {props => <PostCommentsScreen {...props} user={user} theme={theme} />}

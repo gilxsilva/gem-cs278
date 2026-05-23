@@ -154,8 +154,12 @@ function PlacePicker({ visible, onSelect, onClose }) {
       animationType="slide"
       onRequestClose={onClose}
     >
-      <View style={pp.overlay}>
-        <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
+      <KeyboardAvoidingView
+        style={{ flex: 1 }}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <View style={pp.overlay}>
+          <TouchableOpacity style={{ flex: 1 }} activeOpacity={1} onPress={onClose} />
 
         <View style={pp.sheet}>
           <View style={pp.handle} />
@@ -163,8 +167,12 @@ function PlacePicker({ visible, onSelect, onClose }) {
           {/* Header */}
           <View style={pp.sheetHeader}>
             <Text style={pp.sheetTitle}>where is it?</Text>
-            <TouchableOpacity onPress={onClose} hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-              <Ionicons name="close" size={20} color={L2} />
+            <TouchableOpacity
+              onPress={onClose}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+              style={pp.doneBtn}
+            >
+              <Text style={pp.doneBtnText}>Done</Text>
             </TouchableOpacity>
           </View>
 
@@ -321,7 +329,8 @@ function PlacePicker({ visible, onSelect, onClose }) {
             <View style={{ height: 32 }} />
           </ScrollView>
         </View>
-      </View>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -391,7 +400,7 @@ const pp = StyleSheet.create({
   },
 
   // Results scroll
-  resultScroll: { maxHeight: 380 },
+  resultScroll: { maxHeight: 420 },
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -435,6 +444,19 @@ const pp = StyleSheet.create({
     color: L3,
     textAlign: 'center',
     paddingVertical: 18,
+  },
+
+  // Done button
+  doneBtn: {
+    backgroundColor: NAVY,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 7,
+  },
+  doneBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: WHITE,
   },
 
   // Add manually row
@@ -582,14 +604,14 @@ export default function AddPin({ navigation, user }) {
 
       // 3. Upload photo if provided
       if (photo) {
-        const response = await fetch(photo.uri);
-        const blob = await response.blob();
-        const ext  = (photo.uri.split('.').pop()?.split('?')[0] ?? 'jpg').toLowerCase();
-        const storagePath = `gems/${user.uid}/${gem.id}/001.${ext}`;
+        const arrayBuffer = await fetch(photo.uri).then(r => r.arrayBuffer());
+        const storagePath = `gems/${user.uid}/${gem.id}/001.jpg`;
         const { error: uploadErr } = await supabase.storage
           .from('gem-images')
-          .upload(storagePath, blob, { contentType: `image/${ext}`, upsert: true });
-        if (!uploadErr) {
+          .upload(storagePath, arrayBuffer, { contentType: 'image/jpeg', upsert: true });
+        if (uploadErr) {
+          Alert.alert('Photo upload failed', uploadErr.message);
+        } else {
           await supabase.from('gem_images')
             .insert({ gem_id: gem.id, storage_path: storagePath, order_index: 0 });
         }

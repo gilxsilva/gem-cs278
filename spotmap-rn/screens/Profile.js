@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, Image, TouchableOpacity, FlatList,
   StyleSheet, Alert, ScrollView, Share, Modal, TextInput, Switch, Pressable,
-  RefreshControl, KeyboardAvoidingView, Platform,
+  RefreshControl, KeyboardAvoidingView, Platform, ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -99,6 +99,8 @@ function EditCollectionModal({ collection: coll, onSave, onDelete, onClose }) {
 
 function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
   const [displayName, setDisplayName] = useState('');
+  const [handle, setHandle] = useState('');
+  const [handleError, setHandleError] = useState('');
   const [bio, setBio] = useState('');
   const [tagline, setTagline] = useState('');
   const [tags, setTags] = useState([]);
@@ -109,6 +111,8 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
   useEffect(() => {
     if (visible) {
       setDisplayName(profileData.display_name ?? '');
+      setHandle(profileData.handle ?? '');
+      setHandleError('');
       setBio(profileData.bio ?? '');
       setTagline(profileData.taste_tagline ?? '');
       setTags(profileData.taste_tags ?? []);
@@ -116,6 +120,12 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
       setNewAvatarUri(null);
     }
   }, [visible]);
+
+  const onHandleChange = (text) => {
+    const cleaned = text.toLowerCase().replace(/[^a-z0-9_]/g, '');
+    setHandle(cleaned);
+    setHandleError('');
+  };
 
   const pickAvatar = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -142,25 +152,32 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
 
   const handleSave = async () => {
     if (!displayName.trim()) return;
+    if (handle && handle !== profileData.handle) {
+      const { data: taken } = await supabase
+        .from('profiles').select('id').eq('handle', handle).neq('id', userId).maybeSingle();
+      if (taken) { setHandleError('That username is already taken'); return; }
+    }
     setSaving(true);
     try {
       let finalAvatarUrl = profileData.avatar_url;
 
       if (newAvatarUri) {
-        const ext = newAvatarUri.split('.').pop()?.split('?')[0] ?? 'jpg';
-        const path = `avatars/${userId}.${ext}`;
-        const response = await fetch(newAvatarUri);
-        const blob = await response.blob();
+        const path = `avatars/${userId}.jpg`;
+        const arrayBuffer = await fetch(newAvatarUri).then(r => r.arrayBuffer());
         const { error: uploadError } = await supabase.storage
           .from('gem-images')
-          .upload(path, blob, { contentType: `image/${ext}`, upsert: true });
-        if (!uploadError) {
-          finalAvatarUrl = supabase.storage.from('gem-images').getPublicUrl(path).data.publicUrl;
+          .upload(path, arrayBuffer, { contentType: 'image/jpeg', upsert: true });
+        if (uploadError) {
+          Alert.alert('Photo upload failed', uploadError.message);
+        } else {
+          finalAvatarUrl = supabase.storage.from('gem-images').getPublicUrl(path).data.publicUrl
+            + `?t=${Date.now()}`;
         }
       }
 
       const updates = {
         display_name:   displayName.trim(),
+        handle:         handle.trim() || null,
         bio:            bio.trim() || null,
         taste_tagline:  tagline.trim() || null,
         taste_tags:     tags,
@@ -216,6 +233,24 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
               placeholder="Your name"
               returnKeyType="next"
             />
+
+            {/* Username */}
+            <Text style={epStyles.fieldLabel}>Username</Text>
+            <View style={epStyles.handleInputRow}>
+              <Text style={epStyles.handleAt}>@</Text>
+              <TextInput
+                value={handle}
+                onChangeText={onHandleChange}
+                style={[epStyles.input, { flex: 1, marginBottom: 0 }]}
+                placeholderTextColor={MUTED_C}
+                placeholder="yourhandle"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="next"
+              />
+            </View>
+            {handleError ? <Text style={epStyles.handleError}>{handleError}</Text> : null}
+            <View style={{ height: 12 }} />
 
             {/* Bio */}
             <Text style={epStyles.fieldLabel}>Bio</Text>
@@ -300,11 +335,97 @@ const EMPTY_PROFILE = {
 
 const isGuest = uid => uid === 'guest';
 
-export default function Profile({ navigation, route, theme }) {
+function FollowListModal({ visible, type, userId, onClose, onNavigate, t }) {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!visible || !userId) return;
+    setLoading(true);
+    setUsers([]);
+    (async () => {
+      const col = type === 'followers' ? 'follower_id' : 'following_id';
+      const filter = type === 'followers' ? 'following_id' : 'follower_id';
+      const { data: rows } = await supabase.from('follows').select(col).eq(filter, userId);
+      const ids = (rows ?? []).map(r => r[col]);
+      if (!ids.length) { setLoading(false); return; }
+      const { data: profiles } = await supabase
+        .from('profiles').select('id, display_name, avatar_url, handle').in('id', ids);
+      setUsers(profiles ?? []);
+      setLoading(false);
+    })();
+  }, [visible, userId, type]);
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <Pressable style={flStyles.backdrop} onPress={onClose} />
+      <View style={flStyles.sheet}>
+        <View style={flStyles.handle} />
+        <View style={flStyles.header}>
+          <Text style={flStyles.title}>{type === 'followers' ? 'Followers' : 'Following'}</Text>
+          <TouchableOpacity onPress={onClose} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+            <Ionicons name="close" size={20} color={NAVY} />
+          </TouchableOpacity>
+        </View>
+        {loading ? (
+          <ActivityIndicator style={{ marginTop: 32 }} color={NAVY} />
+        ) : users.length === 0 ? (
+          <Text style={flStyles.empty}>No {type} yet</Text>
+        ) : (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {users.map(u => (
+              <TouchableOpacity
+                key={u.id}
+                style={flStyles.row}
+                onPress={() => { onClose(); onNavigate(u); }}
+                activeOpacity={0.75}
+              >
+                {u.avatar_url
+                  ? <Image source={{ uri: u.avatar_url }} style={flStyles.avatar} />
+                  : <View style={[flStyles.avatarFallback, { backgroundColor: t.surface }]}>
+                      <Ionicons name="person" size={16} color={t.muted} />
+                    </View>
+                }
+                <View style={flStyles.rowBody}>
+                  <Text style={[flStyles.name, { color: t.text }]}>{u.display_name}</Text>
+                  {u.handle ? <Text style={[flStyles.handleText, { color: t.muted }]}>@{u.handle}</Text> : null}
+                </View>
+                <Ionicons name="chevron-forward" size={14} color={t.muted} />
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+    </Modal>
+  );
+}
+
+const flStyles = StyleSheet.create({
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40, maxHeight: '70%',
+  },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(13,31,60,0.12)', alignSelf: 'center', marginBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  title: { fontSize: 17, fontWeight: '700', color: NAVY },
+  empty: { textAlign: 'center', color: 'rgba(28,23,20,0.38)', fontSize: 14, marginTop: 32, marginBottom: 24 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
+  avatar: { width: 40, height: 40, borderRadius: 20 },
+  avatarFallback: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  rowBody: { flex: 1 },
+  name: { fontSize: 14, fontWeight: '600' },
+  handleText: { fontSize: 12, marginTop: 1 },
+});
+
+export default function Profile({ navigation, route, theme, onProfileUpdate }) {
   const { user, isOwnProfile = false } = route.params;
   const [profileData, setProfileData] = useState(EMPTY_PROFILE);
   const [pins, setPins] = useState([]);
   const [isFollowing, setIsFollowing] = useState(false);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followListModal, setFollowListModal] = useState({ visible: false, type: 'followers' });
   const [viewerId, setViewerId] = useState(null);
   const [userCollections, setUserCollections] = useState([]);
   const [collectionModalOpen, setCollectionModalOpen] = useState(false);
@@ -371,6 +492,13 @@ export default function Profile({ navigation, route, theme }) {
       setUserCollections(mapped);
     }
 
+    const [followerRes, followingRes] = await Promise.all([
+      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.uid),
+      supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.uid),
+    ]);
+    setFollowerCount(followerRes.count ?? 0);
+    setFollowingCount(followingRes.count ?? 0);
+
     if (!isOwnProfile && viewerId && viewerId !== user.uid) {
       const { data: followRow } = await supabase
         .from('follows')
@@ -392,11 +520,17 @@ export default function Profile({ navigation, route, theme }) {
     if (!viewerId || viewerId === user.uid) return;
     const next = !isFollowing;
     setIsFollowing(next);
-    setProfileData(prev => ({ ...prev, follower_count: Math.max(0, (prev.follower_count ?? 0) + (next ? 1 : -1)) }));
+    setFollowerCount(prev => Math.max(0, prev + (next ? 1 : -1)));
+    let error;
     if (next) {
-      await supabase.from('follows').insert({ follower_id: viewerId, following_id: user.uid });
+      ({ error } = await supabase.from('follows').insert({ follower_id: viewerId, following_id: user.uid }));
     } else {
-      await supabase.from('follows').delete().eq('follower_id', viewerId).eq('following_id', user.uid);
+      ({ error } = await supabase.from('follows').delete().eq('follower_id', viewerId).eq('following_id', user.uid));
+    }
+    if (error) {
+      setIsFollowing(!next);
+      setFollowerCount(prev => Math.max(0, prev + (next ? -1 : 1)));
+      Alert.alert('Error', error.message);
     }
   };
 
@@ -456,15 +590,15 @@ export default function Profile({ navigation, route, theme }) {
             <Text style={[styles.statLabel, { color: t.muted }]}>gems</Text>
           </View>
           <View style={[styles.statDivider, { backgroundColor: t.border }]} />
-          <View style={styles.stat}>
-            <Text style={[styles.statNum, { color: t.text }]}>{profileData.follower_count}</Text>
+          <TouchableOpacity style={styles.stat} onPress={() => setFollowListModal({ visible: true, type: 'followers' })} activeOpacity={0.7}>
+            <Text style={[styles.statNum, { color: t.text }]}>{followerCount}</Text>
             <Text style={[styles.statLabel, { color: t.muted }]}>followers</Text>
-          </View>
+          </TouchableOpacity>
           <View style={[styles.statDivider, { backgroundColor: t.border }]} />
-          <View style={styles.stat}>
-            <Text style={[styles.statNum, { color: t.text }]}>{profileData.following_count}</Text>
+          <TouchableOpacity style={styles.stat} onPress={() => setFollowListModal({ visible: true, type: 'following' })} activeOpacity={0.7}>
+            <Text style={[styles.statNum, { color: t.text }]}>{followingCount}</Text>
             <Text style={[styles.statLabel, { color: t.muted }]}>following</Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -700,8 +834,20 @@ export default function Profile({ navigation, route, theme }) {
         visible={editProfileOpen}
         profileData={profileData}
         userId={user.uid}
-        onSave={updated => { setProfileData(updated); setEditProfileOpen(false); }}
+        onSave={updated => { setProfileData(updated); setEditProfileOpen(false); onProfileUpdate?.(); }}
         onClose={() => setEditProfileOpen(false)}
+      />
+
+      <FollowListModal
+        visible={followListModal.visible}
+        type={followListModal.type}
+        userId={user.uid}
+        t={t}
+        onClose={() => setFollowListModal(prev => ({ ...prev, visible: false }))}
+        onNavigate={u => navigation.navigate('Profile', {
+          user: { uid: u.id, displayName: u.display_name, photoURL: u.avatar_url },
+          isOwnProfile: false,
+        })}
       />
     </View>
   );
@@ -952,6 +1098,9 @@ const epStyles = StyleSheet.create({
     letterSpacing: 0.5, marginBottom: 6, marginTop: 14,
   },
   fieldHint: { fontWeight: '400' },
+  handleInputRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  handleAt: { fontSize: 17, fontWeight: '600', color: MUTED_C, paddingBottom: 2 },
+  handleError: { fontSize: 12, color: '#C0505A', marginTop: 4 },
   input: {
     backgroundColor: 'rgba(13,31,60,0.04)',
     borderWidth: 1, borderColor: 'rgba(28,23,20,0.10)',
