@@ -38,6 +38,8 @@ export default function FeedView({ navigation, user, theme }) {
   const [commentCounts, setCommentCounts] = useState({});
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
+  const [feedMode, setFeedMode] = useState('discover'); // 'discover' | 'circle'
+  const [followingIds, setFollowingIds] = useState(new Set());
   const [collectionModal, setCollectionModal] = useState({ visible: false, pin: null });
   const [reportModal, setReportModal] = useState({ visible: false, gemId: null });
   const [bookmarked, setBookmarked] = useState({});
@@ -53,8 +55,15 @@ export default function FeedView({ navigation, user, theme }) {
   }, [user.uid]);
 
   const loadFeed = useCallback(async () => {
-    const { data, error } = await supabase.rpc('get_feed', { p_limit: 50, p_offset: 0 });
+    const [feedRes, followsRes] = await Promise.all([
+      supabase.rpc('get_feed', { p_limit: 50, p_offset: 0 }),
+      supabase.from('follows').select('following_id').eq('follower_id', user.uid),
+    ]);
+    const { data, error } = feedRes;
     if (error) { console.error('Feed error:', error.message, error.details, error.hint); return; }
+
+    // Build the set of followed user IDs for circle filtering and social proof labels
+    setFollowingIds(new Set((followsRes.data ?? []).map(r => r.following_id)));
 
     const mapped = (data ?? []).map(row => ({
       id:           row.gem_id,
@@ -150,9 +159,14 @@ useFocusEffect(
 
   const sharePin = (pin) => shareGem(pin);
 
+  // Circle mode: only show gems from followed users
+  const feedPins = feedMode === 'circle'
+    ? pins.filter(p => followingIds.has(p.authorId))
+    : pins;
+
   const filteredPins = activeFilter === 'all'
-    ? pins
-    : pins.filter(p => p.category === activeFilter);
+    ? feedPins
+    : feedPins.filter(p => p.category === activeFilter);
 
   const trendingGems = [...pins]
     .sort((a, b) => (saveCounts[b.id] ?? 0) - (saveCounts[a.id] ?? 0))
@@ -230,7 +244,15 @@ useFocusEffect(
                 onPress={() => navigation.navigate('PinDetail', { pinId: pin.id, userId: user.uid })}
               >{pin.title}</Text>
             </Text>
-            <Text style={[styles.cardTimestamp, { color: t.muted }]}>{timeAgo(pin.createdAt)}</Text>
+            <View style={styles.timestampRow}>
+              <Text style={[styles.cardTimestamp, { color: t.muted }]}>{timeAgo(pin.createdAt)}</Text>
+              {feedMode === 'discover' && !isGuest && followingIds.has(pin.authorId) && (
+                <View style={[styles.circleBadge, { backgroundColor: t.accent + '18' }]}>
+                  <Ionicons name="people-outline" size={9} color={t.accent} />
+                  <Text style={[styles.circleBadgeText, { color: t.accent }]}>circle</Text>
+                </View>
+              )}
+            </View>
           </View>
 
           <View style={styles.cardHeaderRight}>
@@ -334,7 +356,7 @@ useFocusEffect(
   };
 
   const ListHeader = () => (
-    trendingGems.length > 0 ? (
+    trendingGems.length > 0 && feedMode === 'discover' ? (
       <View style={styles.trendSection}>
         <View style={styles.trendSectionHeader}>
           <Text style={styles.trendStar}>✦</Text>
@@ -393,11 +415,39 @@ useFocusEffect(
           </View>
         </View>
 
+        {/* Single unified filter row: mode chips → divider → category chips */}
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.filterScroll}
         >
+          {/* Source mode: Discover */}
+          <TouchableOpacity
+            style={[styles.filterChip, feedMode === 'discover' && { backgroundColor: t.accent }]}
+            onPress={() => setFeedMode('discover')}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.filterChipText, { color: feedMode === 'discover' ? '#FAF7F2' : t.muted }]}>
+              Discover
+            </Text>
+          </TouchableOpacity>
+
+          {/* Source mode: Your circle */}
+          <TouchableOpacity
+            style={[styles.filterChip, feedMode === 'circle' && { backgroundColor: t.accent }]}
+            onPress={() => setFeedMode('circle')}
+            activeOpacity={0.8}
+          >
+            <Ionicons name="people-outline" size={12} color={feedMode === 'circle' ? '#FAF7F2' : t.muted} />
+            <Text style={[styles.filterChipText, { color: feedMode === 'circle' ? '#FAF7F2' : t.muted }]}>
+              Circle
+            </Text>
+          </TouchableOpacity>
+
+          {/* Divider separating source from category */}
+          <View style={[styles.filterDivider, { backgroundColor: t.border }]} />
+
+          {/* Category: All */}
           <TouchableOpacity
             style={[styles.filterChip, activeFilter === 'all' && { backgroundColor: t.accent }]}
             onPress={() => setActiveFilter('all')}
@@ -442,11 +492,27 @@ useFocusEffect(
           />
         }
         ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyGem}>✦</Text>
-            <Text style={[styles.emptyTitle, { color: t.text }]}>No gems here yet</Text>
-            <Text style={[styles.emptySub, { color: t.muted }]}>Be the first to leave one</Text>
-          </View>
+          feedMode === 'circle' ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyGem}>✦</Text>
+              <Text style={[styles.emptyTitle, { color: t.text }]}>
+                {followingIds.size === 0
+                  ? 'Follow people to see their gems here'
+                  : 'Your circle hasn\'t shared any gems yet'}
+              </Text>
+              <Text style={[styles.emptySub, { color: t.muted }]}>
+                {followingIds.size === 0
+                  ? 'Find people whose taste you trust and follow them'
+                  : 'Check back soon, or explore Discover'}
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyGem}>✦</Text>
+              <Text style={[styles.emptyTitle, { color: t.text }]}>No gems here yet</Text>
+              <Text style={[styles.emptySub, { color: t.muted }]}>Be the first to leave one</Text>
+            </View>
+          )
         }
       />
 
@@ -494,6 +560,19 @@ const styles = StyleSheet.create({
     overflow: 'hidden', alignItems: 'center', justifyContent: 'center',
   },
   avatarImg: { width: 36, height: 36 },
+
+  // Inline timestamp + circle badge row
+  timestampRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 3,
+  },
+  circleBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 3,
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 100,
+  },
+  circleBadgeText: { fontSize: 10, fontWeight: '700' },
+
+  // Divider between mode chips and category chips
+  filterDivider: { width: 1, height: 20, alignSelf: 'center', marginHorizontal: 2 },
 
   filterScroll: { paddingHorizontal: 16, paddingBottom: 12, gap: 8 },
   filterChip: {

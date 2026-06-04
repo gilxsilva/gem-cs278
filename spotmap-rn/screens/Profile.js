@@ -535,6 +535,13 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
     let error;
     if (next) {
       ({ error } = await supabase.from('follows').insert({ follower_id: viewerId, following_id: user.uid }));
+      if (!error) {
+        Alert.alert(
+          `Following ${firstName}`,
+          `You'll now see ${firstName}'s gems in Your circle on Discover.`,
+          [{ text: 'Nice ✦' }]
+        );
+      }
     } else {
       ({ error } = await supabase.from('follows').delete().eq('follower_id', viewerId).eq('following_id', user.uid));
     }
