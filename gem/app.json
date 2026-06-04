@@ -1,5 +1,6 @@
 {
   "expo": {
+    "owner": "gilxsilva-2",
     "name": "gem",
     "slug": "gem",
     "scheme": "gem",
@@ -40,19 +41,19 @@
         }
       }
     },
-    "extra": {
-      "eas": {
-        "projectId": "e4fb188d-1463-46dd-b537-ef9883db3a74"
-      }
-    },
     "runtimeVersion": {
       "policy": "appVersion"
     },
-    "updates": {
-      "url": "https://u.expo.dev/e4fb188d-1463-46dd-b537-ef9883db3a74"
-    },
     "plugins": [
       "expo-web-browser"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "be3469de-5c5b-447f-83f2-375447754435"
+      }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/be3469de-5c5b-447f-83f2-375447754435"
+    }
   }
 }

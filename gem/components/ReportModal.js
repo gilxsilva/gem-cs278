@@ -13,44 +13,30 @@ const MUTED  = 'rgba(28,23,20,0.38)';
 const BORDER = 'rgba(28,23,20,0.09)';
 const GREEN  = '#3A7D44';
 
-const REASONS = [
-  {
-    id:    'spam',
-    label: 'Spam',
-    sub:   'Promotional, repetitive, or off-topic',
-    icon:  'ban-outline',
-  },
-  {
-    id:    'inappropriate',
-    label: 'Inappropriate content',
-    sub:   'Offensive or harmful material',
-    icon:  'warning-outline',
-  },
-  {
-    id:    'misinformation',
-    label: 'Misinformation',
-    sub:   'Inaccurate or misleading information',
-    icon:  'alert-circle-outline',
-  },
-  {
-    id:    'not_real_place',
-    label: 'Not a real place',
-    sub:   'This location doesn\'t seem to exist',
-    icon:  'map-outline',
-  },
-  {
-    id:    'other',
-    label: 'Other',
-    sub:   'Something else is wrong with this gem',
-    icon:  'ellipsis-horizontal-circle-outline',
-  },
+const GEM_REASONS = [
+  { id: 'spam',           label: 'Spam',                 sub: 'Promotional, repetitive, or off-topic',   icon: 'ban-outline' },
+  { id: 'inappropriate',  label: 'Inappropriate content', sub: 'Offensive or harmful material',           icon: 'warning-outline' },
+  { id: 'misinformation', label: 'Misinformation',        sub: 'Inaccurate or misleading information',   icon: 'alert-circle-outline' },
+  { id: 'not_real_place', label: 'Not a real place',      sub: "This location doesn't seem to exist",    icon: 'map-outline' },
+  { id: 'other',          label: 'Other',                 sub: 'Something else is wrong with this gem',  icon: 'ellipsis-horizontal-circle-outline' },
 ];
 
-export default function ReportModal({ visible, gemId, userId, onClose }) {
-  const insets     = useSafeAreaInsets();
-  const slideAnim  = useRef(new Animated.Value(600)).current;
-  const [phase, setPhase]         = useState('select'); // 'select' | 'done'
+const COMMENT_REASONS = [
+  { id: 'spam',           label: 'Spam',                 sub: 'Promotional, repetitive, or off-topic',     icon: 'ban-outline' },
+  { id: 'inappropriate',  label: 'Inappropriate content', sub: 'Offensive or harmful material',             icon: 'warning-outline' },
+  { id: 'harassment',     label: 'Harassment',            sub: 'Targeting or bullying another person',      icon: 'shield-outline' },
+  { id: 'misinformation', label: 'Misinformation',        sub: 'Inaccurate or misleading information',     icon: 'alert-circle-outline' },
+  { id: 'other',          label: 'Other',                 sub: 'Something else is wrong with this comment', icon: 'ellipsis-horizontal-circle-outline' },
+];
+
+// Accepts either gemId (gem report) or commentId (comment report) — never both.
+export default function ReportModal({ visible, gemId, commentId, userId, onClose }) {
+  const insets           = useSafeAreaInsets();
+  const slideAnim        = useRef(new Animated.Value(600)).current;
+  const [phase, setPhase]           = useState('select');
   const [submitting, setSubmitting] = useState(false);
+
+  const isCommentReport = !!commentId;
 
   useEffect(() => {
     if (!visible) return;
@@ -72,13 +58,13 @@ export default function ReportModal({ visible, gemId, userId, onClose }) {
     if (submitting) return;
     setSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('reports')
-        .insert({ reporter_id: userId, gem_id: gemId, reason: reasonId });
+      const payload = isCommentReport
+        ? { reporter_id: userId, comment_id: commentId, reason: reasonId }
+        : { reporter_id: userId, gem_id: gemId,         reason: reasonId };
+      const { error } = await supabase.from('reports').insert(payload);
       if (error) throw error;
       setPhase('done');
-    } catch (err) {
-      // Show error inline instead of a jarring alert
+    } catch {
       setPhase('error');
     } finally {
       setSubmitting(false);
@@ -93,7 +79,6 @@ export default function ReportModal({ visible, gemId, userId, onClose }) {
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      {/* Dark overlay — tap to dismiss */}
       <Pressable style={styles.overlay} onPress={phase === 'select' ? handleClose : undefined} />
 
       <Animated.View
@@ -103,41 +88,40 @@ export default function ReportModal({ visible, gemId, userId, onClose }) {
           { transform: [{ translateY: slideAnim }] },
         ]}
       >
-        {/* Handle bar */}
         <View style={styles.handle} />
 
         {phase === 'select' && (
           <SelectPhase
+            isCommentReport={isCommentReport}
             onSelect={submit}
             onCancel={handleClose}
             submitting={submitting}
           />
         )}
-
-        {phase === 'done' && (
-          <DonePhase onClose={handleClose} />
-        )}
-
-        {phase === 'error' && (
-          <ErrorPhase onClose={handleClose} />
-        )}
+        {phase === 'done'  && <DonePhase  isCommentReport={isCommentReport} onClose={handleClose} />}
+        {phase === 'error' && <ErrorPhase onClose={handleClose} />}
       </Animated.View>
     </Modal>
   );
 }
 
-function SelectPhase({ onSelect, onCancel, submitting }) {
+function SelectPhase({ isCommentReport, onSelect, onCancel, submitting }) {
+  const reasons = isCommentReport ? COMMENT_REASONS : GEM_REASONS;
   return (
     <>
       <View style={styles.header}>
-        <Text style={styles.title}>Report this gem</Text>
+        <Text style={styles.title}>
+          {isCommentReport ? 'Report this comment' : 'Report this gem'}
+        </Text>
         <Text style={styles.subtitle}>
-          Help us keep Gem safe, useful, and welcoming.
+          {isCommentReport
+            ? 'Help us keep conversations thoughtful and safe.'
+            : 'Help us keep Gem safe, useful, and welcoming.'}
         </Text>
       </View>
 
       <View style={styles.reasonList}>
-        {REASONS.map((r, i) => (
+        {reasons.map((r, i) => (
           <TouchableOpacity
             key={r.id}
             style={[styles.reasonRow, i > 0 && styles.reasonRowBorder]}
@@ -167,7 +151,7 @@ function SelectPhase({ onSelect, onCancel, submitting }) {
   );
 }
 
-function DonePhase({ onClose }) {
+function DonePhase({ isCommentReport, onClose }) {
   return (
     <View style={styles.doneWrap}>
       <View style={styles.doneIconWrap}>
@@ -175,7 +159,9 @@ function DonePhase({ onClose }) {
       </View>
       <Text style={styles.doneTitle}>Thanks for helping keep Gem thoughtful.</Text>
       <Text style={styles.doneBody}>
-        Eva, Yujen, and Gil will review this report and take action if the gem goes against our community guidelines.
+        {isCommentReport
+          ? 'Eva, Yujen, and Gil will review this comment and take action if it goes against our guidelines.'
+          : 'Eva, Yujen, and Gil will review this report and take action if the gem goes against our community guidelines.'}
       </Text>
       <TouchableOpacity style={styles.doneBtn} onPress={onClose} activeOpacity={0.85}>
         <Text style={styles.doneBtnText}>Done</Text>
@@ -207,114 +193,64 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.40)',
   },
   sheet: {
-    position:        'absolute',
-    bottom:          0,
-    left:            0,
-    right:           0,
+    position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius:  24,
-    borderTopRightRadius: 24,
-    paddingTop:      10,
-    shadowColor:     '#000',
-    shadowOpacity:   0.14,
-    shadowRadius:    24,
-    shadowOffset:    { width: 0, height: -4 },
-    elevation:       12,
+    borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingTop: 10,
+    shadowColor: '#000', shadowOpacity: 0.14, shadowRadius: 24,
+    shadowOffset: { width: 0, height: -4 }, elevation: 12,
   },
   handle: {
     width: 36, height: 4, borderRadius: 2,
-    backgroundColor: BORDER,
-    alignSelf: 'center',
-    marginBottom: 18,
+    backgroundColor: BORDER, alignSelf: 'center', marginBottom: 18,
   },
-
-  // ── Header ───────────────────────────────────────────────────────────────
-  header: {
-    paddingHorizontal: 24,
-    marginBottom: 16,
-  },
+  header: { paddingHorizontal: 24, marginBottom: 16 },
   title: {
     fontSize: 18, fontWeight: '700', color: NAVY,
     letterSpacing: -0.4, marginBottom: 4,
   },
-  subtitle: {
-    fontSize: 14, color: MUTED, lineHeight: 20,
-  },
-
-  // ── Reason list ──────────────────────────────────────────────────────────
+  subtitle: { fontSize: 14, color: MUTED, lineHeight: 20 },
   reasonList: {
-    marginHorizontal: 16,
-    backgroundColor: '#FAFAFA',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: BORDER,
-    overflow: 'hidden',
-    marginBottom: 10,
+    marginHorizontal: 16, backgroundColor: '#FAFAFA',
+    borderRadius: 16, borderWidth: 1, borderColor: BORDER,
+    overflow: 'hidden', marginBottom: 10,
   },
   reasonRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingHorizontal: 14, paddingVertical: 13,
   },
-  reasonRowBorder: {
-    borderTopWidth: 1,
-    borderTopColor: BORDER,
-  },
+  reasonRowBorder: { borderTopWidth: 1, borderTopColor: BORDER },
   reasonIconWrap: {
     width: 36, height: 36, borderRadius: 10,
     backgroundColor: 'rgba(13,31,60,0.06)',
-    alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
   },
   reasonText: { flex: 1 },
   reasonLabel: {
     fontSize: 14, fontWeight: '600', color: NAVY,
     letterSpacing: -0.1, marginBottom: 1,
   },
-  reasonSub: {
-    fontSize: 12, color: MUTED, lineHeight: 16,
-  },
-
-  // ── Cancel ───────────────────────────────────────────────────────────────
-  cancelLink: {
-    alignItems: 'center',
-    paddingVertical: 14,
-  },
-  cancelText: {
-    fontSize: 15, fontWeight: '500', color: MUTED,
-  },
-
-  // ── Done / Error ─────────────────────────────────────────────────────────
+  reasonSub: { fontSize: 12, color: MUTED, lineHeight: 16 },
+  cancelLink: { alignItems: 'center', paddingVertical: 14 },
+  cancelText: { fontSize: 15, fontWeight: '500', color: MUTED },
   doneWrap: {
-    paddingHorizontal: 28,
-    paddingTop: 8,
-    paddingBottom: 8,
-    alignItems: 'center',
+    paddingHorizontal: 28, paddingTop: 8, paddingBottom: 8, alignItems: 'center',
   },
   doneIconWrap: {
     width: 72, height: 72, borderRadius: 22,
     backgroundColor: 'rgba(58,125,68,0.08)',
-    alignItems: 'center', justifyContent: 'center',
-    marginBottom: 18,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 18,
   },
   doneTitle: {
     fontSize: 17, fontWeight: '700', color: NAVY,
-    textAlign: 'center', letterSpacing: -0.3,
-    marginBottom: 10, lineHeight: 24,
+    textAlign: 'center', letterSpacing: -0.3, marginBottom: 10, lineHeight: 24,
   },
   doneBody: {
-    fontSize: 14, color: MUTED, textAlign: 'center',
-    lineHeight: 21, marginBottom: 28,
+    fontSize: 14, color: MUTED, textAlign: 'center', lineHeight: 21, marginBottom: 28,
   },
   doneBtn: {
     backgroundColor: NAVY, borderRadius: 100,
-    paddingVertical: 14, width: '100%',
-    alignItems: 'center',
+    paddingVertical: 14, width: '100%', alignItems: 'center',
   },
-  doneBtnText: {
-    fontSize: 16, fontWeight: '700',
-    color: CREAM, letterSpacing: -0.2,
-  },
+  doneBtnText: { fontSize: 16, fontWeight: '700', color: CREAM, letterSpacing: -0.2 },
 });
