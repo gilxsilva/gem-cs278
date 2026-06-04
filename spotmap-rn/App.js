@@ -216,7 +216,7 @@ export default function App() {
                 {props => <CommunityGuideScreen {...props} />}
               </Stack.Screen>
               <Stack.Screen name="Settings" options={{ animation: 'slide_from_right' }}>
-                {props => <SettingsScreen {...props} />}
+                {props => <SettingsScreen {...props} user={user} theme={theme} toggleTheme={toggleTheme} />}
               </Stack.Screen>
               <Stack.Screen name="CollectionDetail" options={{ animation: 'slide_from_right' }}>
                 {props => <CollectionDetailScreen {...props} theme={theme} />}
