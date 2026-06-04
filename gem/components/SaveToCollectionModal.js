@@ -209,7 +209,7 @@ export default function SaveToCollectionModal({ visible, pin, userId, onClose, o
           .upsert({ collection_id: coll.id, gem_id: pin.id });
         if (error) console.error('Save to collection error:', error.message);
         else await supabase.from('collections')
-          .update({ item_count: coll.count + 1 }).eq('id', coll.id);
+          .update({ item_count: coll.count + 1 }).eq('id', coll.id).eq('owner_id', userId);
       } else {
         const { error } = await supabase
           .from('collection_gems')
@@ -218,7 +218,7 @@ export default function SaveToCollectionModal({ visible, pin, userId, onClose, o
           .eq('gem_id', pin.id);
         if (error) console.error('Remove from collection error:', error.message);
         else await supabase.from('collections')
-          .update({ item_count: Math.max(0, coll.count - 1) }).eq('id', coll.id);
+          .update({ item_count: Math.max(0, coll.count - 1) }).eq('id', coll.id).eq('owner_id', userId);
       }
     }
   };
