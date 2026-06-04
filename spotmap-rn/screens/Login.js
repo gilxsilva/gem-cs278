@@ -5,11 +5,12 @@
  *
  * Structure (top → bottom):
  *   BrandBlock          logo · wordmark · tagline
- *   HeroSection         headline · rotating animated subtitle (300 ms, 3.2 s cycle)
- *   GemPreviewCarousel  horizontal-snap cards · white surface · hairline border
- *   LoginCTA (footer)   pinned · flat navy button · Stanford inline note
+ *   HeroSection         bold headline · rotating animated subtitle (300 ms, 3.2 s cycle)
+ *   SocialProofBand     overlapping avatar initials · join line
+ *   MiniFeedPreview     vertical social feed preview — 3 cards styled like the actual app
+ *   LoginCTA (footer)   pinned · pill CTA · trust note
  *
- * Auth flow: Google OAuth via Supabase implicit flow — unchanged.
+ * Auth flow: Google OAuth via Supabase implicit flow — UNCHANGED.
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -23,75 +24,80 @@ import {
   ActivityIndicator,
   ScrollView,
   Animated,
-  Dimensions,
   Platform,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
+import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabase';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 WebBrowser.maybeCompleteAuthSession();
 
-const { width: SCREEN_W } = Dimensions.get('window');
-
 // ─── Design tokens ───────────────────────────────────────────────────────────
-// Three-level text opacity system, matching Apple's semantic text roles.
 const NAVY   = '#0D1F3C';
 const CREAM  = '#FAF7F2';
-const CARD   = '#FFFFFF';
-const L1     = NAVY;                       // primary text
-const L2     = 'rgba(13,31,60,0.42)';      // secondary text
-const L3     = 'rgba(13,31,60,0.28)';      // tertiary / metadata
-const BORDER = 'rgba(13,31,60,0.08)';      // hairline surfaces
-const RED    = '#8C1515';                  // Stanford
+const L1     = NAVY;
+const L2     = 'rgba(13,31,60,0.42)';
+const L3     = 'rgba(13,31,60,0.26)';
+const BORDER = 'rgba(13,31,60,0.08)';
 
-// ─── Rotating copy ───────────────────────────────────────────────────────────
+// ─── Rotating subtitles ──────────────────────────────────────────────────────
 const SUBLINES = [
-  'hidden spots your circle actually loves',
-  'places tied to real memories',
-  'trusted finds — not generic reviews',
+  'not ratings. just real recommendations.',
+  'places people would actually tell a friend about.',
+  'the spots worth going back to.',
 ];
 
-// ─── Sample gem content ──────────────────────────────────────────────────────
-// Shows users what gem looks like before they sign up.
-// Each card models the correct norm: specific, moment-driven, from a real person.
-const GEMS = [
-  {
-    id: '1',
-    emoji: '☕',
-    place: 'Coupa at Tresidder',
-    note:  'Best spot to actually focus. Way less crowded than CoHo after 2 pm.',
-    author: 'Maya',
-  },
-  {
-    id: '2',
-    emoji: '🌿',
-    place: 'Garden behind Frost',
-    note:  'A hidden courtyard most people walk right past. Perfect quiet afternoon.',
-    author: 'James',
-  },
-  {
-    id: '3',
-    emoji: '📖',
-    place: 'Green Library, 3rd floor',
-    note:  'Silent. Great natural light. Almost always empty after 8 pm.',
-    author: 'Priya',
-  },
-  {
-    id: '4',
-    emoji: '🌅',
-    place: 'Lake Lag at sunrise',
-    note:  'Worth the early alarm. Bring coffee. Go alone or with one person.',
-    author: 'Chris',
-  },
+// ─── Social proof avatars ────────────────────────────────────────────────────
+const SOCIAL_AVATARS = [
+  { initial: 'E', color: '#7A9FC2' },
+  { initial: 'M', color: '#B8956A' },
+  { initial: 'K', color: '#A98BBE' },
+  { initial: 'J', color: '#C4828A' },
+  { initial: 'S', color: '#8A9BBE' },
 ];
 
-const CARD_W   = SCREEN_W * 0.72;
-const CARD_GAP = 10;
+// ─── Preview feed data ────────────────────────────────────────────────────────
+// Each card models the actual app's feed style: named person + found + place.
+// No emojis. Specific, human, believable.
+const PREVIEW_GEMS = [
+  {
+    id:          '1',
+    authorName:  'Maya',
+    initial:     'M',
+    avatarColor: '#B8956A',
+    place:       'Coupa back patio after 2pm',
+    note:        'Sunny, quieter than CoHo, and way better if you actually need to focus.',
+    category:    'Coffee',
+    catColor:    '#B8956A',
+    saves:       14,
+  },
+  {
+    id:          '2',
+    authorName:  'James',
+    initial:     'J',
+    avatarColor: '#7A9FC2',
+    place:       'The Yerba Buena waterfall',
+    note:        'Tucked behind the main path — peaceful if you need ten quiet minutes downtown.',
+    category:    'Hidden',
+    catColor:    '#C4828A',
+    saves:       22,
+  },
+  {
+    id:          '3',
+    authorName:  'Priya',
+    initial:     'P',
+    avatarColor: '#A98BBE',
+    place:       'Late-night tacos on Folsom',
+    note:        'Cheap, fast, and exactly what you want after a long day. Cash only.',
+    category:    'Food',
+    catColor:    '#C4A882',
+    saves:       38,
+  },
+];
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BrandBlock
-// Logo → wordmark → tagline, centered, generous below.
 // ─────────────────────────────────────────────────────────────────────────────
 function BrandBlock() {
   return (
@@ -106,37 +112,36 @@ function BrandBlock() {
 const bs = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: 38,
+    marginBottom: 20,
   },
   logo: {
-    width: 68,
-    height: 68,
-    borderRadius: 17,          // ~1/4 of size — Apple's app icon radius proportion
-    marginBottom: 14,
+    width: 60,
+    height: 60,
+    borderRadius: 15,
+    marginBottom: 12,
   },
   wordmark: {
-    fontSize: 27,
-    fontWeight: '600',          // semibold, not black — confident without shouting
+    fontSize: 28,
+    fontWeight: '700',
     color: L1,
-    letterSpacing: -1.2,
-    marginBottom: 5,
+    letterSpacing: -1.4,
+    marginBottom: 4,
   },
   tagline: {
     fontSize: 12,
     fontWeight: '400',
     color: L2,
-    letterSpacing: 0.3,
+    letterSpacing: 0.2,
   },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HeroSection
-// Bold headline + animated rotating subtitle.
-// Timing: 300 ms fade (Apple standard), 3.2 s cycle.
+// Larger, bolder headline. Same rotating subtitle animation.
 // ─────────────────────────────────────────────────────────────────────────────
 function HeroSection() {
-  const [idx, setIdx]   = useState(0);
-  const opacity         = useRef(new Animated.Value(1)).current;
+  const [idx, setIdx] = useState(0);
+  const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     const cycle = setInterval(() => {
@@ -159,7 +164,7 @@ function HeroSection() {
   return (
     <View style={hs.wrap}>
       <Text style={hs.headline}>
-        discover the spots{'\n'}your friends actually love
+        discover places{'\n'}your friends actually love
       </Text>
       <Animated.Text style={[hs.subline, { opacity }]}>
         {SUBLINES[idx]}
@@ -171,182 +176,266 @@ function HeroSection() {
 const hs = StyleSheet.create({
   wrap: {
     alignItems: 'center',
-    marginBottom: 40,
-    paddingHorizontal: 28,
+    marginBottom: 22,
+    paddingHorizontal: 24,
   },
   headline: {
-    fontSize: 27,
-    fontWeight: '700',          // display weight — the one place we go full bold
+    fontSize: 32,
+    fontWeight: '800',
     color: L1,
     textAlign: 'center',
-    lineHeight: 34,
-    letterSpacing: -0.9,
+    lineHeight: 39,
+    letterSpacing: -1.2,
     marginBottom: 12,
   },
   subline: {
     fontSize: 15,
-    fontWeight: '400',          // regular — supports without competing
+    fontWeight: '400',
     color: L2,
     textAlign: 'center',
-    letterSpacing: 0,
-    lineHeight: 21,
-    minHeight: 21,              // prevents layout shift during crossfade
+    lineHeight: 22,
+    minHeight: 22,
   },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GemCard
-// White surface · hairline border · Apple-level shadow (0.04 opacity).
-// Three-level type hierarchy inside the card.
+// SocialProofBand
+// Five overlapping colored avatar circles + a join line.
+// Signals community before users even see the feed preview.
 // ─────────────────────────────────────────────────────────────────────────────
-function GemCard({ item }) {
+function SocialProofBand() {
   return (
-    <View style={gc.card}>
-
-      {/* Place header */}
-      <View style={gc.header}>
-        <View style={gc.emojiWrap}>
-          <Text style={gc.emoji}>{item.emoji}</Text>
-        </View>
-        <View style={gc.titleBlock}>
-          <Text style={gc.place} numberOfLines={1}>{item.place}</Text>
-          <Text style={gc.gemLabel}>gem</Text>
-        </View>
+    <View style={sp.wrap}>
+      <View style={sp.avatarRow}>
+        {SOCIAL_AVATARS.map((a, i) => (
+          <View
+            key={i}
+            style={[
+              sp.avatar,
+              { backgroundColor: a.color, marginLeft: i > 0 ? -10 : 0 },
+            ]}
+          >
+            <Text style={sp.initial}>{a.initial}</Text>
+          </View>
+        ))}
       </View>
-
-      {/* Memory note */}
-      <Text style={gc.note} numberOfLines={2}>{item.note}</Text>
-
-      {/* Attribution */}
-      <View style={gc.footer}>
-        <View style={gc.avatar} />
-        <Text style={gc.author}>saved by {item.author}</Text>
-      </View>
-
+      <Text style={sp.text}>
+        Join people saving places worth remembering
+      </Text>
     </View>
   );
 }
 
-const gc = StyleSheet.create({
+const sp = StyleSheet.create({
+  wrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    gap: 14,
+    marginBottom: 22,
+  },
+  avatarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: CREAM,
+  },
+  initial: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    letterSpacing: -0.2,
+  },
+  text: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    color: L2,
+    lineHeight: 18,
+  },
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FeedPreviewCard
+// Styled identically to the actual app feed: avatar initial · narrative ·
+// note · category pill · saves count. No emojis.
+// ─────────────────────────────────────────────────────────────────────────────
+function FeedPreviewCard({ item }) {
+  return (
+    <View style={fp.card}>
+      {/* Header: avatar + narrative + category pill */}
+      <View style={fp.header}>
+        <View style={[fp.avatar, { backgroundColor: item.avatarColor }]}>
+          <Text style={fp.avatarInitial}>{item.initial}</Text>
+        </View>
+        <Text style={fp.narrative} numberOfLines={1}>
+          <Text style={fp.bold}>{item.authorName}</Text>
+          {' found '}
+          <Text style={fp.bold}>{item.place}</Text>
+        </Text>
+        <View style={[fp.catPill, { backgroundColor: item.catColor + '1A' }]}>
+          <Text style={[fp.catText, { color: item.catColor }]}>{item.category}</Text>
+        </View>
+      </View>
+
+      {/* Note */}
+      <Text style={fp.note}>{item.note}</Text>
+
+      {/* Saves count */}
+      <View style={fp.footer}>
+        <Ionicons name="bookmark-outline" size={12} color={L3} />
+        <Text style={fp.saves}>{item.saves} saved this</Text>
+      </View>
+    </View>
+  );
+}
+
+const fp = StyleSheet.create({
   card: {
-    width: CARD_W,
-    marginRight: CARD_GAP,
-    backgroundColor: CARD,
-    borderRadius: 16,                       // Apple content-card radius
-    padding: 18,
-    borderWidth: StyleSheet.hairlineWidth,  // 0.5 on Retina — Apple-standard
-    borderColor: BORDER,
-    // Apple-level depth: barely perceptible, lets the surface breathe
-    shadowColor: '#000',
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 11,
+    gap: 10,
+    marginBottom: 8,
   },
-  emojiWrap: {
-    width: 40,
-    height: 40,
-    borderRadius: 11,
-    backgroundColor: CREAM,                 // cream-on-white = Apple's grouped table feel
+  avatar: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
   },
-  emoji: { fontSize: 20 },
-  titleBlock: { flex: 1 },
-  place: {
-    fontSize: 15,
-    fontWeight: '600',                      // semibold — consistent with Apple cells
-    color: L1,
+  avatarInitial: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
     letterSpacing: -0.3,
-    marginBottom: 2,
   },
-  gemLabel: {
+  narrative: {
+    flex: 1,
+    fontSize: 13,
+    color: L2,
+    lineHeight: 18,
+  },
+  bold: {
+    fontWeight: '700',
+    color: L1,
+  },
+  catPill: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 100,
+    flexShrink: 0,
+  },
+  catText: {
     fontSize: 11,
-    fontWeight: '400',
-    color: L3,
-    letterSpacing: 0.2,
+    fontWeight: '600',
+    letterSpacing: 0.1,
   },
   note: {
     fontSize: 13,
-    fontWeight: '400',
-    color: L2,
+    color: L1,
     lineHeight: 19,
-    letterSpacing: -0.1,
-    marginBottom: 14,
+    marginBottom: 8,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 7,
+    gap: 5,
   },
-  avatar: {
-    width: 15,
-    height: 15,
-    borderRadius: 7.5,
-    backgroundColor: BORDER,
-  },
-  author: {
-    fontSize: 12,
-    fontWeight: '400',
+  saves: {
+    fontSize: 11,
     color: L3,
-    letterSpacing: 0.1,
+    fontWeight: '500',
   },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// GemPreviewCarousel
-// Horizontal snap scroll. Section label follows Apple's grouped-section style.
+// MiniFeedPreview
+// Replaces the horizontal emoji carousel entirely.
+// A white rounded card holding the 3 preview gems, vertically stacked.
+// Looks and feels like the actual Gem feed so users immediately understand
+// what they're joining.
 // ─────────────────────────────────────────────────────────────────────────────
-function GemPreviewCarousel() {
+function MiniFeedPreview() {
   return (
-    <View>
-      <Text style={cc.label}>what a gem looks like</Text>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={cc.content}
-        snapToInterval={CARD_W + CARD_GAP}
-        decelerationRate="fast"
-        overScrollMode="never"
-      >
-        {GEMS.map(item => <GemCard key={item.id} item={item} />)}
-        <View style={{ width: 28 }} />
-      </ScrollView>
+    <View style={mf.container}>
+      <View style={mf.labelRow}>
+        <Text style={mf.label}>Gems from the community</Text>
+        <Text style={mf.labelRight}>✦ a few of many</Text>
+      </View>
+      <View style={mf.feed}>
+        {PREVIEW_GEMS.map((item, i) => (
+          <React.Fragment key={item.id}>
+            {i > 0 && <View style={mf.divider} />}
+            <FeedPreviewCard item={item} />
+          </React.Fragment>
+        ))}
+      </View>
     </View>
   );
 }
 
-const cc = StyleSheet.create({
+const mf = StyleSheet.create({
+  container: {
+    paddingHorizontal: 20,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+    paddingHorizontal: 2,
+  },
   label: {
     fontSize: 11,
-    fontWeight: '600',
+    fontWeight: '700',
     color: L3,
-    letterSpacing: 0.8,
+    letterSpacing: 0.7,
     textTransform: 'uppercase',
-    marginBottom: 13,
-    paddingHorizontal: 28,
   },
-  content: {
-    paddingLeft: 28,
+  labelRight: {
+    fontSize: 11,
+    color: L3,
+    fontWeight: '400',
+  },
+  feed: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: BORDER,
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 2,
+  },
+  divider: {
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: BORDER,
+    marginHorizontal: 16,
   },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // LoginCTA  (pinned footer)
-// Flat navy button — color carries the weight, no shadow needed.
-// Footer casts a soft upward shadow for separation from scroll content.
+// Auth behavior: UNCHANGED.
 // ─────────────────────────────────────────────────────────────────────────────
 function LoginCTA({ onPress, loading }) {
   return (
     <View style={cs.footer}>
-
       <TouchableOpacity
         style={[cs.btn, loading && cs.btnLoading]}
         onPress={onPress}
@@ -360,17 +449,13 @@ function LoginCTA({ onPress, loading }) {
             <View style={cs.gBadge}>
               <Text style={cs.gGlyph}>G</Text>
             </View>
-            <Text style={cs.btnLabel}>Sign in with Google</Text>
+            <Text style={cs.btnLabel}>Continue with Google</Text>
           </>
         )}
       </TouchableOpacity>
-
       <Text style={cs.note}>
-        Use your{' '}
-        <Text style={cs.noteAccent}>@stanford.edu</Text>
-        {' '}account to join your campus circle
+        New here? Your profile is created automatically.
       </Text>
-
     </View>
   );
 }
@@ -378,12 +463,11 @@ function LoginCTA({ onPress, loading }) {
 const cs = StyleSheet.create({
   footer: {
     paddingHorizontal: 24,
-    paddingTop: 18,
+    paddingTop: 16,
     paddingBottom: 6,
     alignItems: 'center',
-    gap: 14,
+    gap: 12,
     backgroundColor: CREAM,
-    // Soft upward shadow — separates footer from scroll without a hard line
     shadowColor: '#000',
     shadowOpacity: 0.05,
     shadowRadius: 10,
@@ -395,14 +479,11 @@ const cs = StyleSheet.create({
     justifyContent: 'center',
     gap: 10,
     backgroundColor: NAVY,
-    borderRadius: 14,
-    paddingVertical: 18,        // taller tap target — Apple minimum is 44pt
+    borderRadius: 100,
+    paddingVertical: 18,
     width: '100%',
-    // Flat — no shadow. The navy-on-cream contrast is the affordance.
   },
-  btnLoading: {
-    opacity: 0.55,
-  },
+  btnLoading: { opacity: 0.55 },
   gBadge: {
     width: 22,
     height: 22,
@@ -418,8 +499,8 @@ const cs = StyleSheet.create({
     letterSpacing: -0.2,
   },
   btnLabel: {
-    fontSize: 17,               // Apple's standard interactive label size
-    fontWeight: '600',          // semibold — confident, not heavy
+    fontSize: 17,
+    fontWeight: '600',
     color: '#FFFFFF',
     letterSpacing: -0.2,
   },
@@ -430,22 +511,17 @@ const cs = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 18,
   },
-  noteAccent: {
-    fontWeight: '600',
-    color: RED,
-  },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Login  (root)
-// Screen fades in on mount (500 ms) — Apple's graceful appearance pattern.
-// Auth flow: Google OAuth via Supabase, unchanged.
+// Screen fades in on mount — Apple's graceful appearance pattern.
+// Auth flow: Google OAuth via Supabase implicit flow — UNCHANGED.
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Login() {
   const [loading, setLoading]   = useState(false);
   const screenOpacity           = useRef(new Animated.Value(0)).current;
 
-  // Gentle fade-in on first render
   useEffect(() => {
     Animated.timing(screenOpacity, {
       toValue: 1,
@@ -454,6 +530,7 @@ export default function Login() {
     }).start();
   }, [screenOpacity]);
 
+  // ── Auth — UNCHANGED ─────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
     if (loading) return;
     setLoading(true);
@@ -485,7 +562,7 @@ export default function Login() {
             refresh_token: params.refresh_token,
           });
           if (sessionError) Alert.alert('Sign-in error', sessionError.message);
-          // onAuthStateChange in App.js handles the rest
+          // onAuthStateChange in App.js handles navigation
         } else {
           Alert.alert('Sign-in error', 'No tokens received. Please try again.');
         }
@@ -501,7 +578,7 @@ export default function Login() {
     <SafeAreaView style={root.safe}>
       <Animated.View style={[root.body, { opacity: screenOpacity }]}>
 
-        {/* Scrollable content — brand, hero, cards */}
+        {/* Scrollable content — brand, hero, social proof, feed preview */}
         <ScrollView
           style={root.scroll}
           contentContainerStyle={root.scrollContent}
@@ -509,7 +586,8 @@ export default function Login() {
         >
           <BrandBlock />
           <HeroSection />
-          <GemPreviewCarousel />
+          <SocialProofBand />
+          <MiniFeedPreview />
         </ScrollView>
 
         {/* Pinned footer — always in view */}
@@ -525,14 +603,10 @@ const root = StyleSheet.create({
     flex: 1,
     backgroundColor: CREAM,
   },
-  body: {
-    flex: 1,
-  },
-  scroll: {
-    flex: 1,
-  },
+  body: { flex: 1 },
+  scroll: { flex: 1 },
   scrollContent: {
-    paddingTop: 28,
-    paddingBottom: 12,
+    paddingTop: 18,
+    paddingBottom: 24,
   },
 });
