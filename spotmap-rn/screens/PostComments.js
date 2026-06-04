@@ -157,9 +157,6 @@ export default function PostComments({ navigation, route, user, theme }) {
               <Text style={styles.narrativeBold}>{firstName} </Text>
               {'found '}
               <Text style={styles.narrativeBold}>{pin.title}</Text>
-              {saverNames.length > 0
-                ? <Text style={[styles.narrativeMuted, { color: t.muted }]}>{` with ${saverNames.join(' and ')}`}</Text>
-                : null}
             </Text>
             <Text style={[styles.cardTimestamp, { color: t.muted }]}>{timeAgo(pin.createdAt)}</Text>
           </View>

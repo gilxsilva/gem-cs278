@@ -24,6 +24,7 @@ import {
   ScrollView,
   Animated,
   Dimensions,
+  Platform,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from '../supabase';
@@ -457,7 +458,7 @@ export default function Login() {
     if (loading) return;
     setLoading(true);
     try {
-      WebBrowser.dismissAuthSession();
+      if (Platform.OS === 'ios') WebBrowser.dismissAuthSession();
 
       const redirectTo = 'gem://';
       const { data, error } = await supabase.auth.signInWithOAuth({

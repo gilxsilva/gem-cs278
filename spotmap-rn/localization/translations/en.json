@@ -1,0 +1,244 @@
+{
+  "navigation": {
+    "discover": "Discover",
+    "map": "Map"
+  },
+  "splash": {
+    "tagline": "places worth remembering"
+  },
+  "login": {
+    "tagline": "places worth remembering",
+    "headline": "discover the spots\nyour friends actually love",
+    "carouselLabel": "what a gem looks like",
+    "signInWithGoogle": "Sign in with Google",
+    "stanfordNote": "Use your @stanford.edu account to join your campus circle",
+    "savedBy": "saved by",
+    "gemLabel": "gem",
+    "subline1": "hidden spots your circle actually loves",
+    "subline2": "places tied to real memories",
+    "subline3": "trusted finds — not generic reviews",
+    "errors": {
+      "signInError": "Sign-in error",
+      "noTokens": "No tokens received. Please try again.",
+      "error": "Error"
+    }
+  },
+  "settings": {
+    "title": "settings",
+    "sections": {
+      "learn": "LEARN",
+      "account": "ACCOUNT",
+      "preferences": "PREFERENCES"
+    },
+    "rows": {
+      "howGemWorks": "How gem works",
+      "howGemWorksSub": "Replay the onboarding",
+      "communityGuide": "Community Guide",
+      "communityGuideSub": "Principles, examples, and norms",
+      "signOut": "Sign out",
+      "language": "Language",
+      "languageSub": "Change app language"
+    },
+    "signOutAlert": {
+      "title": "Sign out",
+      "message": "Are you sure?",
+      "cancel": "Cancel",
+      "confirm": "Sign out"
+    },
+    "languageModal": {
+      "title": "Choose Language",
+      "subtitle": "Select your preferred language"
+    }
+  },
+  "feed": {
+    "trending": "Trending gems",
+    "all": "All",
+    "saved": "saved",
+    "notes": "Notes:",
+    "found": "found",
+    "empty": {
+      "title": "No gems here yet",
+      "subtitle": "Be the first to leave one"
+    },
+    "delete": {
+      "title": "Delete gem",
+      "message": "This will permanently remove your gem. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete"
+    },
+    "report": {
+      "title": "Report gem",
+      "message": "Why are you reporting this?",
+      "spam": "Spam",
+      "inappropriate": "Inappropriate content",
+      "misinformation": "Misinformation",
+      "other": "Other",
+      "cancel": "Cancel",
+      "thanksTitle": "Thanks for reporting",
+      "thanksMessage": "We'll review this gem shortly."
+    }
+  },
+  "addPin": {
+    "title": "leave a gem",
+    "whereIsIt": "WHERE IS IT?",
+    "searchPlace": "search for a place…",
+    "nameYourGem": "NAME YOUR GEM",
+    "typeOfGem": "TYPE OF GEM",
+    "whatMadeSpecial": "WHAT MADE IT SPECIAL?",
+    "whatWouldYouTell": "what would you tell a friend?",
+    "addPhoto": "ADD A PHOTO",
+    "tapToAddPhoto": "tap to add a photo",
+    "optional": "optional",
+    "submit": "leave this gem  ✦",
+    "placePicker": {
+      "title": "where is it?",
+      "done": "Done",
+      "searchPlaceholder": "search any place in the world…",
+      "inGem": "IN GEM",
+      "places": "PLACES",
+      "noResults": "No results for \"{{query}}\"",
+      "addManually": "Can't find it? Add manually",
+      "addQuery": "Add \"{{query}}\" manually",
+      "placeNameLabel": "PLACE NAME",
+      "addressLabel": "ADDRESS",
+      "addressHint": "We'll use the address to place your pin on the map.",
+      "cancel": "cancel",
+      "addThisPlace": "Add this place"
+    },
+    "alerts": {
+      "almostThereTitle": "Almost there",
+      "almostThereMsg": "Add a name, type, and location for your gem.",
+      "permissionTitle": "Permission needed",
+      "permissionMsg": "Allow photo access to add a photo.",
+      "signInTitle": "Sign in to leave a gem",
+      "signInMsg": "Create an account to share your finds.",
+      "signIn": "Sign in",
+      "cancel": "Cancel",
+      "errorTitle": "Something went wrong",
+      "tryAgain": "Try again."
+    }
+  },
+  "profile": {
+    "title": "profile",
+    "gems": "gems",
+    "followers": "followers",
+    "following": "following",
+    "editProfile": "Edit profile",
+    "collections": "COLLECTIONS",
+    "new": "New",
+    "yourGems": "your gems",
+    "gemsOf": "{{name}}'s gems",
+    "noGems": "No gems yet — leave one!",
+    "follow": "Follow",
+    "followingAction": "Following",
+    "editProfileModal": {
+      "title": "Edit profile",
+      "name": "Name",
+      "username": "Username",
+      "bio": "Bio",
+      "tasteTagline": "Taste tagline",
+      "tasteTags": "Taste tags",
+      "placeholderName": "Your name",
+      "placeholderHandle": "yourhandle",
+      "placeholderBio": "What are you into?",
+      "placeholderTagline": "quiet corners, strong coffee",
+      "placeholderTag": "Add a tag…",
+      "saving": "Saving…",
+      "save": "Save",
+      "usernameTaken": "That username is already taken",
+      "permissionTitle": "Permission needed",
+      "permissionMsg": "Allow photo library access to change your avatar."
+    },
+    "editCollectionModal": {
+      "title": "Edit collection",
+      "name": "Name",
+      "makePublic": "Make public",
+      "showOnProfile": "Show on your profile.",
+      "deleteCollection": "Delete collection",
+      "saveChanges": "Save changes",
+      "deleteAlert": {
+        "title": "Delete collection",
+        "message": "Delete \"{{name}}\"? This can't be undone.",
+        "cancel": "Cancel",
+        "confirm": "Delete"
+      }
+    },
+    "signOut": {
+      "title": "Sign out",
+      "message": "Are you sure?",
+      "cancel": "Cancel",
+      "confirm": "Sign out"
+    }
+  },
+  "search": {
+    "placeholder": "search a friend, location, etc.",
+    "people": "People",
+    "topSpots": "Top spots",
+    "places": "Places",
+    "noResults": "No results for \"{{query}}\"",
+    "tryName": "Try a name, place, or category"
+  },
+  "collections": {
+    "saveToCollection": "Save to collection",
+    "chooseWhere": "Choose where this gem should live",
+    "newCollection": "New collection",
+    "createSectionLabel": "Name",
+    "enterName": "Enter collection name",
+    "makePublic": "Make public",
+    "publicSub": "The collection will be shown on your profile.",
+    "create": "Create",
+    "cancel": "Cancel",
+    "couldNotCreate": "Could not create collection",
+    "savedTo": "Saved to {{name}}"
+  },
+  "pinDetail": {
+    "save": "Save",
+    "leftThisGem": "left this gem",
+    "thoughts": "Thoughts",
+    "thoughtsCount_one": "{{count}} thought",
+    "thoughtsCount_other": "{{count}} thoughts",
+    "beFirstThought": "Be the first to share a thought",
+    "shareThought": "share a thought…",
+    "gemNotFound": "Gem not found",
+    "couldNotPost": "Could not post",
+    "delete": {
+      "title": "Delete gem",
+      "message": "This will permanently remove your gem. This cannot be undone.",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "couldNotDelete": "Could not delete"
+    },
+    "report": {
+      "title": "Report gem",
+      "message": "Why are you reporting this?",
+      "spam": "Spam",
+      "inappropriate": "Inappropriate content",
+      "misinformation": "Misinformation",
+      "other": "Other",
+      "cancel": "Cancel",
+      "thanksTitle": "Thanks for reporting",
+      "thanksMessage": "We'll review this gem shortly."
+    },
+    "deleteComment": {
+      "title": "Delete comment",
+      "message": "Remove this thought?",
+      "cancel": "Cancel",
+      "confirm": "Delete",
+      "couldNotDelete": "Could not delete"
+    },
+    "signIn": {
+      "title": "Sign in to comment",
+      "message": "Create an account or sign in to leave your thoughts.",
+      "cancel": "Cancel",
+      "confirm": "Sign in"
+    }
+  },
+  "categories": {
+    "study": "Study Gems",
+    "food": "Food Spots",
+    "coffee": "Coffee Runs",
+    "events": "Moments",
+    "hidden": "Hidden Gems",
+    "entertainment": "Late Night"
+  }
+}

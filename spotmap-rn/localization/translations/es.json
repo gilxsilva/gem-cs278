@@ -1,0 +1,244 @@
+{
+  "navigation": {
+    "discover": "Descubrir",
+    "map": "Mapa"
+  },
+  "splash": {
+    "tagline": "lugares que vale la pena recordar"
+  },
+  "login": {
+    "tagline": "lugares que vale la pena recordar",
+    "headline": "descubre los lugares\nque tus amigos realmente aman",
+    "carouselLabel": "cómo se ve un gem",
+    "signInWithGoogle": "Iniciar sesión con Google",
+    "stanfordNote": "Usa tu cuenta de @stanford.edu para unirte a tu círculo del campus",
+    "savedBy": "guardado por",
+    "gemLabel": "gem",
+    "subline1": "lugares secretos que tu círculo realmente ama",
+    "subline2": "lugares ligados a recuerdos reales",
+    "subline3": "descubrimientos de confianza — no reseñas genéricas",
+    "errors": {
+      "signInError": "Error al iniciar sesión",
+      "noTokens": "No se recibieron tokens. Por favor intenta de nuevo.",
+      "error": "Error"
+    }
+  },
+  "settings": {
+    "title": "ajustes",
+    "sections": {
+      "learn": "APRENDER",
+      "account": "CUENTA",
+      "preferences": "PREFERENCIAS"
+    },
+    "rows": {
+      "howGemWorks": "Cómo funciona gem",
+      "howGemWorksSub": "Repetir el tutorial",
+      "communityGuide": "Guía de la comunidad",
+      "communityGuideSub": "Principios, ejemplos y normas",
+      "signOut": "Cerrar sesión",
+      "language": "Idioma",
+      "languageSub": "Cambiar el idioma de la app"
+    },
+    "signOutAlert": {
+      "title": "Cerrar sesión",
+      "message": "¿Estás seguro?",
+      "cancel": "Cancelar",
+      "confirm": "Cerrar sesión"
+    },
+    "languageModal": {
+      "title": "Elegir idioma",
+      "subtitle": "Selecciona tu idioma preferido"
+    }
+  },
+  "feed": {
+    "trending": "Gems populares",
+    "all": "Todo",
+    "saved": "guardados",
+    "notes": "Notas:",
+    "found": "encontró",
+    "empty": {
+      "title": "Aún no hay gems aquí",
+      "subtitle": "Sé el primero en dejar uno"
+    },
+    "delete": {
+      "title": "Eliminar gem",
+      "message": "Esto eliminará permanentemente tu gem. No se puede deshacer.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar"
+    },
+    "report": {
+      "title": "Reportar gem",
+      "message": "¿Por qué lo reportas?",
+      "spam": "Spam",
+      "inappropriate": "Contenido inapropiado",
+      "misinformation": "Desinformación",
+      "other": "Otro",
+      "cancel": "Cancelar",
+      "thanksTitle": "Gracias por reportar",
+      "thanksMessage": "Revisaremos este gem pronto."
+    }
+  },
+  "addPin": {
+    "title": "dejar un gem",
+    "whereIsIt": "¿DÓNDE ESTÁ?",
+    "searchPlace": "busca un lugar…",
+    "nameYourGem": "NOMBRA TU GEM",
+    "typeOfGem": "TIPO DE GEM",
+    "whatMadeSpecial": "¿QUÉ LO HIZO ESPECIAL?",
+    "whatWouldYouTell": "¿qué le dirías a un amigo?",
+    "addPhoto": "AGREGAR FOTO",
+    "tapToAddPhoto": "toca para agregar una foto",
+    "optional": "opcional",
+    "submit": "dejar este gem  ✦",
+    "placePicker": {
+      "title": "¿dónde está?",
+      "done": "Listo",
+      "searchPlaceholder": "busca cualquier lugar del mundo…",
+      "inGem": "EN GEM",
+      "places": "LUGARES",
+      "noResults": "Sin resultados para \"{{query}}\"",
+      "addManually": "¿No lo encuentras? Agregar manualmente",
+      "addQuery": "Agregar \"{{query}}\" manualmente",
+      "placeNameLabel": "NOMBRE DEL LUGAR",
+      "addressLabel": "DIRECCIÓN",
+      "addressHint": "Usaremos la dirección para colocar tu pin en el mapa.",
+      "cancel": "cancelar",
+      "addThisPlace": "Agregar este lugar"
+    },
+    "alerts": {
+      "almostThereTitle": "Casi listo",
+      "almostThereMsg": "Agrega un nombre, tipo y ubicación para tu gem.",
+      "permissionTitle": "Permiso necesario",
+      "permissionMsg": "Permite el acceso a fotos para agregar una foto.",
+      "signInTitle": "Inicia sesión para dejar un gem",
+      "signInMsg": "Crea una cuenta para compartir tus descubrimientos.",
+      "signIn": "Iniciar sesión",
+      "cancel": "Cancelar",
+      "errorTitle": "Algo salió mal",
+      "tryAgain": "Intenta de nuevo."
+    }
+  },
+  "profile": {
+    "title": "perfil",
+    "gems": "gems",
+    "followers": "seguidores",
+    "following": "siguiendo",
+    "editProfile": "Editar perfil",
+    "collections": "COLECCIONES",
+    "new": "Nueva",
+    "yourGems": "tus gems",
+    "gemsOf": "gems de {{name}}",
+    "noGems": "Sin gems aún — ¡deja uno!",
+    "follow": "Seguir",
+    "followingAction": "Siguiendo",
+    "editProfileModal": {
+      "title": "Editar perfil",
+      "name": "Nombre",
+      "username": "Usuario",
+      "bio": "Bio",
+      "tasteTagline": "Frase de gusto",
+      "tasteTags": "Etiquetas de gusto",
+      "placeholderName": "Tu nombre",
+      "placeholderHandle": "tuusuario",
+      "placeholderBio": "¿En qué estás interesado?",
+      "placeholderTagline": "rincones tranquilos, café fuerte",
+      "placeholderTag": "Agregar etiqueta…",
+      "saving": "Guardando…",
+      "save": "Guardar",
+      "usernameTaken": "Ese nombre de usuario ya está tomado",
+      "permissionTitle": "Permiso necesario",
+      "permissionMsg": "Permite el acceso a la biblioteca de fotos para cambiar tu avatar."
+    },
+    "editCollectionModal": {
+      "title": "Editar colección",
+      "name": "Nombre",
+      "makePublic": "Hacer pública",
+      "showOnProfile": "Se mostrará en tu perfil.",
+      "deleteCollection": "Eliminar colección",
+      "saveChanges": "Guardar cambios",
+      "deleteAlert": {
+        "title": "Eliminar colección",
+        "message": "¿Eliminar \"{{name}}\"? No se puede deshacer.",
+        "cancel": "Cancelar",
+        "confirm": "Eliminar"
+      }
+    },
+    "signOut": {
+      "title": "Cerrar sesión",
+      "message": "¿Estás seguro?",
+      "cancel": "Cancelar",
+      "confirm": "Cerrar sesión"
+    }
+  },
+  "search": {
+    "placeholder": "busca un amigo, lugar, etc.",
+    "people": "Personas",
+    "topSpots": "Mejores lugares",
+    "places": "Lugares",
+    "noResults": "Sin resultados para \"{{query}}\"",
+    "tryName": "Prueba un nombre, lugar o categoría"
+  },
+  "collections": {
+    "saveToCollection": "Guardar en colección",
+    "chooseWhere": "Elige dónde debe vivir este gem",
+    "newCollection": "Nueva colección",
+    "createSectionLabel": "Nombre",
+    "enterName": "Nombre de la colección",
+    "makePublic": "Hacer pública",
+    "publicSub": "La colección se mostrará en tu perfil.",
+    "create": "Crear",
+    "cancel": "Cancelar",
+    "couldNotCreate": "No se pudo crear la colección",
+    "savedTo": "Guardado en {{name}}"
+  },
+  "pinDetail": {
+    "save": "Guardar",
+    "leftThisGem": "dejó este gem",
+    "thoughts": "Pensamientos",
+    "thoughtsCount_one": "{{count}} pensamiento",
+    "thoughtsCount_other": "{{count}} pensamientos",
+    "beFirstThought": "Sé el primero en compartir un pensamiento",
+    "shareThought": "comparte un pensamiento…",
+    "gemNotFound": "Gem no encontrado",
+    "couldNotPost": "No se pudo publicar",
+    "delete": {
+      "title": "Eliminar gem",
+      "message": "Esto eliminará permanentemente tu gem. No se puede deshacer.",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar",
+      "couldNotDelete": "No se pudo eliminar"
+    },
+    "report": {
+      "title": "Reportar gem",
+      "message": "¿Por qué lo reportas?",
+      "spam": "Spam",
+      "inappropriate": "Contenido inapropiado",
+      "misinformation": "Desinformación",
+      "other": "Otro",
+      "cancel": "Cancelar",
+      "thanksTitle": "Gracias por reportar",
+      "thanksMessage": "Revisaremos este gem pronto."
+    },
+    "deleteComment": {
+      "title": "Eliminar comentario",
+      "message": "¿Eliminar este pensamiento?",
+      "cancel": "Cancelar",
+      "confirm": "Eliminar",
+      "couldNotDelete": "No se pudo eliminar"
+    },
+    "signIn": {
+      "title": "Inicia sesión para comentar",
+      "message": "Crea una cuenta o inicia sesión para dejar tus pensamientos.",
+      "cancel": "Cancelar",
+      "confirm": "Iniciar sesión"
+    }
+  },
+  "categories": {
+    "study": "Lugares de Estudio",
+    "food": "Restaurantes",
+    "coffee": "Cafés",
+    "events": "Momentos",
+    "hidden": "Gemas Ocultas",
+    "entertainment": "Noche"
+  }
+}
