@@ -37,6 +37,7 @@ export default function PostComments({ navigation, route, user, theme }) {
   const flatListRef = useRef(null);
 
   const firstName = pin.authorName?.split(' ')[0] ?? 'Someone';
+  const saverNames = [];
   useEffect(() => {
     if (isGuest) return;
     loadComments();

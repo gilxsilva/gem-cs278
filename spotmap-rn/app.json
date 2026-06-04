@@ -49,11 +49,10 @@
       "policy": "appVersion"
     },
     "updates": {
-      "url": "https://u.expo.dev/eec5fe7a-5e64-4070-b195-d3700d7d7d5d"
+      "url": "https://u.expo.dev/e4fb188d-1463-46dd-b537-ef9883db3a74"
     },
     "plugins": [
       "expo-web-browser"
-    ],
-    "owner": "evawanek"
+    ]
   }
 }

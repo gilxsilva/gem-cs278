@@ -24,6 +24,10 @@ import {
   ActivityIndicator,
   ScrollView,
   Animated,
+<<<<<<< Updated upstream
+=======
+  Dimensions,
+>>>>>>> Stashed changes
   Platform,
 } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
