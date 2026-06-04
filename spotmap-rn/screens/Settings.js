@@ -343,11 +343,11 @@ export default function Settings({ navigation, user, theme, toggleTheme }) {
           <View style={styles.divider} />
           <Row
             icon="sunny-outline"
-            iconColor="#C4A882"
-            iconBg="rgba(196,168,130,0.14)"
+            iconColor={MUTED}
+            iconBg="rgba(28,23,20,0.06)"
             title="Appearance"
-            value={isDark ? "Dark" : "Light"}
-            onPress={toggleTheme}
+            subtitle="Coming soon"
+            disabled
           />
           <View style={styles.divider} />
           <Row
