@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, FlatList, TouchableOpacity, Image,
-  StyleSheet, ScrollView, Pressable, RefreshControl, Alert, Linking,
+  StyleSheet, ScrollView, Pressable, RefreshControl, Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -41,8 +41,11 @@ export default function FeedView({ navigation, user, theme }) {
   const [collectionModal, setCollectionModal] = useState({ visible: false, pin: null });
   const [reportModal, setReportModal] = useState({ visible: false, gemId: null });
   const [bookmarked, setBookmarked] = useState({});
+  const flatListRef = useRef(null);
   const t = THEMES[theme];
   const isGuest = user.uid === 'guest';
+
+  const scrollToTop = () => flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
 
   useEffect(() => {
     if (isGuest) return;
@@ -353,14 +356,25 @@ useFocusEffect(
     <View style={[styles.container, { backgroundColor: t.bg }]}>
       <SafeAreaView edges={['top']} style={{ backgroundColor: t.bg }}>
         <View style={styles.header}>
-          <Image source={require('../assets/logo.png')} style={styles.wordmark} />
+          {/* Logo — tap scrolls feed to top */}
+          <TouchableOpacity onPress={scrollToTop} activeOpacity={0.8} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+            <Image source={require('../assets/logo.png')} style={styles.wordmark} />
+          </TouchableOpacity>
+
+          {/* Search pill — navigates to Search screen */}
+          <TouchableOpacity
+            style={[styles.searchPill, { backgroundColor: t.surface }]}
+            onPress={() => navigation.navigate('Search')}
+            activeOpacity={0.72}
+          >
+            <Ionicons name="search-outline" size={14} color={t.muted} />
+            <Text style={[styles.searchPillText, { color: t.muted }]} numberOfLines={1}>
+              search gems and places
+            </Text>
+          </TouchableOpacity>
+
+          {/* Actions: create + profile */}
           <View style={styles.headerRight}>
-            <TouchableOpacity onPress={() => Linking.openURL('https://forms.gle/rH3ZF466XyrPgcA26')}>
-              <Ionicons name="chatbox-ellipses-outline" size={20} color={t.muted} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Search')}>
-              <Ionicons name="search" size={20} color={t.muted} />
-            </TouchableOpacity>
             <TouchableOpacity
               style={[styles.addBtn, { backgroundColor: t.accent }]}
               onPress={() => navigation.navigate('AddPin')}
@@ -412,6 +426,7 @@ useFocusEffect(
       </SafeAreaView>
 
       <FlatList
+        ref={flatListRef}
         data={filteredPins}
         keyExtractor={item => item.id}
         renderItem={renderPin}
@@ -458,11 +473,21 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
 
   header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 20, paddingTop: 12, paddingBottom: 8,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingTop: 12, paddingBottom: 8,
+    gap: 10,
   },
-  wordmark: { width: 36, height: 36, borderRadius: 9 },
-  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  wordmark: { width: 32, height: 32, borderRadius: 8 },
+  // Search pill — the primary discovery affordance
+  searchPill: {
+    flex: 1,
+    flexDirection: 'row', alignItems: 'center', gap: 7,
+    borderRadius: 12, paddingHorizontal: 12, paddingVertical: 9,
+  },
+  searchPillText: {
+    fontSize: 13, fontWeight: '400', flex: 1,
+  },
+  headerRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   addBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   avatarBtn: {
     width: 36, height: 36, borderRadius: 18,

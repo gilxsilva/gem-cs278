@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
+  Linking,
   Modal,
   Animated,
   Pressable,
@@ -401,6 +402,15 @@ export default function Settings({ navigation, user, theme, toggleTheme }) {
             title="About Gem"
             subtitle={`Version ${VERSION} · Made by Eva, Yujen & Gil`}
             onPress={showAbout}
+          />
+          <View style={styles.divider} />
+          <Row
+            icon="chatbubble-ellipses-outline"
+            iconColor="#7A9FC2"
+            iconBg="rgba(122,159,194,0.14)"
+            title="Share feedback"
+            subtitle="Tell us what's working or what isn't"
+            onPress={() => Linking.openURL('https://forms.gle/rH3ZF466XyrPgcA26')}
           />
         </View>
 
