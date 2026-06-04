@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useFocusEffect } from '@react-navigation/native';
 import {
   View, Text, FlatList, TouchableOpacity, Image,
-  StyleSheet, ScrollView, Pressable, RefreshControl, Share, Alert, Linking,
+  StyleSheet, ScrollView, Pressable, RefreshControl, Alert, Linking,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,6 +10,7 @@ import { supabase } from '../supabase';
 import { getCat, CATEGORIES, THEMES } from '../constants';
 import SaveToCollectionModal from '../components/SaveToCollectionModal';
 import ReportModal from '../components/ReportModal';
+import { shareGem } from '../services/share';
 
 // Supports both Supabase storage paths and full external URLs (used in seed data)
 function resolveImageUrl(path) {
@@ -144,13 +145,7 @@ useFocusEffect(
     setReportModal({ visible: true, gemId: pin.id });
   };
 
-  const sharePin = async (pin) => {
-    const location = pin.locationName ? ` · ${pin.locationName}` : '';
-    await Share.share({
-      message: `Check out "${pin.title}"${location} on SpotMap`,
-      title: pin.title,
-    });
-  };
+  const sharePin = (pin) => shareGem(pin);
 
   const filteredPins = activeFilter === 'all'
     ? pins

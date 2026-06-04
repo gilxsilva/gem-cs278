@@ -560,9 +560,11 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Check out ${firstName}'s gems on gem — hidden spots, study places, and memories worth remembering.`,
+        message: `Check out ${firstName}'s gems on Gem — hidden spots, study places, and memories worth remembering.\n\nGem helps you discover meaningful places saved by real people.`,
       });
-    } catch (_) {}
+    } catch (_) {
+      Alert.alert("Couldn't share", "Couldn't open sharing right now. Please try again.");
+    }
   };
 
   // ── List header sections ──────────────────────────────────────────────────
