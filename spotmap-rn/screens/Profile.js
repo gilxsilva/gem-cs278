@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   View, Text, Image, TouchableOpacity, FlatList,
   StyleSheet, Alert, ScrollView, Share, Modal, TextInput, Switch, Pressable,
@@ -17,10 +17,18 @@ function resolveImageUrl(path) {
   return supabase.storage.from('gem-images').getPublicUrl(path).data.publicUrl;
 }
 
-const NAVY = '#0D1F3C';
+const NAVY    = '#0D1F3C';
 const MUTED_C = 'rgba(28,23,20,0.38)';
 
+// Cycling accent palette for taste tag chips — gives each tag a unique personality
+const TAG_COLORS = [
+  '#7A9FC2', '#B8956A', '#A98BBE', '#C4828A',
+  '#8A9BBE', '#3A7D44', '#C4A882', '#8B6E9A',
+];
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EditCollectionModal — UNCHANGED
+// ─────────────────────────────────────────────────────────────────────────────
 function EditCollectionModal({ collection: coll, onSave, onDelete, onClose }) {
   const [name, setName] = useState(coll?.name ?? '');
   const [isPublic, setIsPublic] = useState(coll?.visibility === 'public');
@@ -64,7 +72,6 @@ function EditCollectionModal({ collection: coll, onSave, onDelete, onClose }) {
 
         <View style={eStyles.section}>
           <View style={eStyles.divider} />
-
           <View style={eStyles.optionRow}>
             <View style={{ flex: 1 }}>
               <Text style={eStyles.optionTitle}>Make public</Text>
@@ -97,6 +104,9 @@ function EditCollectionModal({ collection: coll, onSave, onDelete, onClose }) {
   );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// EditProfileModal — UNCHANGED
+// ─────────────────────────────────────────────────────────────────────────────
 function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
   const [displayName, setDisplayName] = useState('');
   const [handle, setHandle] = useState('');
@@ -210,7 +220,6 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
           <Text style={epStyles.title}>Edit profile</Text>
 
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-            {/* Avatar */}
             <TouchableOpacity style={epStyles.avatarWrap} onPress={pickAvatar} activeOpacity={0.8}>
               {avatarSource
                 ? <Image source={{ uri: avatarSource }} style={epStyles.avatar} />
@@ -223,7 +232,6 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
               </View>
             </TouchableOpacity>
 
-            {/* Name */}
             <Text style={epStyles.fieldLabel}>Name</Text>
             <TextInput
               value={displayName}
@@ -234,7 +242,6 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
               returnKeyType="next"
             />
 
-            {/* Username */}
             <Text style={epStyles.fieldLabel}>Username</Text>
             <View style={epStyles.handleInputRow}>
               <Text style={epStyles.handleAt}>@</Text>
@@ -252,7 +259,6 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
             {handleError ? <Text style={epStyles.handleError}>{handleError}</Text> : null}
             <View style={{ height: 12 }} />
 
-            {/* Bio */}
             <Text style={epStyles.fieldLabel}>Bio</Text>
             <TextInput
               value={bio}
@@ -264,7 +270,6 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
               numberOfLines={3}
             />
 
-            {/* Taste tagline */}
             <Text style={epStyles.fieldLabel}>Taste tagline</Text>
             <TextInput
               value={tagline}
@@ -275,7 +280,6 @@ function EditProfileModal({ visible, profileData, userId, onSave, onClose }) {
               returnKeyType="done"
             />
 
-            {/* Taste tags */}
             <Text style={epStyles.fieldLabel}>Taste tags <Text style={epStyles.fieldHint}>({tags.length}/8)</Text></Text>
             {tags.length > 0 && (
               <View style={epStyles.tagsWrap}>
@@ -335,6 +339,9 @@ const EMPTY_PROFILE = {
 
 const isGuest = uid => uid === 'guest';
 
+// ─────────────────────────────────────────────────────────────────────────────
+// FollowListModal — UNCHANGED
+// ─────────────────────────────────────────────────────────────────────────────
 function FollowListModal({ visible, type, userId, onClose, onNavigate, t }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -400,24 +407,9 @@ function FollowListModal({ visible, type, userId, onClose, onNavigate, t }) {
   );
 }
 
-const flStyles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
-  sheet: {
-    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
-    paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40, maxHeight: '70%',
-  },
-  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(13,31,60,0.12)', alignSelf: 'center', marginBottom: 16 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
-  title: { fontSize: 17, fontWeight: '700', color: NAVY },
-  empty: { textAlign: 'center', color: 'rgba(28,23,20,0.38)', fontSize: 14, marginTop: 32, marginBottom: 24 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
-  avatar: { width: 40, height: 40, borderRadius: 20 },
-  avatarFallback: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  rowBody: { flex: 1 },
-  name: { fontSize: 14, fontWeight: '600' },
-  handleText: { fontSize: 12, marginTop: 1 },
-});
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Profile
+// ─────────────────────────────────────────────────────────────────────────────
 export default function Profile({ navigation, route, theme, onProfileUpdate }) {
   const { user, isOwnProfile = false } = route.params;
   const [profileData, setProfileData] = useState(EMPTY_PROFILE);
@@ -435,9 +427,27 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
   const t = THEMES[theme];
 
   const displayName = profileData.display_name ?? user.displayName ?? 'User';
-  const firstName = displayName.split(' ')[0];
-  const handle = profileData.handle ? `@${profileData.handle}` : `@${user.displayName?.toLowerCase().replace(/\s/g, '') ?? 'user'}`;
+  const firstName   = displayName.split(' ')[0];
+  const handle      = profileData.handle ? `@${profileData.handle}` : `@${user.displayName?.toLowerCase().replace(/\s/g, '') ?? 'user'}`;
+  const avatarUrl   = profileData.avatar_url ?? user.photoURL ?? null;
 
+  // Derived: top gem categories from existing pins data — no extra API call
+  const topCats = useMemo(() => {
+    if (pins.length < 3) return [];
+    const counts = {};
+    pins.forEach(p => { if (p.category) counts[p.category] = (counts[p.category] ?? 0) + 1; });
+    return Object.entries(counts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([id]) => getCat(id));
+  }, [pins]);
+
+  // Derived: join year from profile created_at
+  const joinYear = profileData.created_at
+    ? new Date(profileData.created_at).getFullYear()
+    : null;
+
+  // ── Data loading (UNCHANGED) ─────────────────────────────────────────────
   const loadAll = useCallback(async () => {
     if (isGuest(user.uid)) {
       setPins([]);
@@ -485,7 +495,7 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
         id:         c.id,
         name:       c.name,
         icon:       c.icon ?? 'bookmark-outline',
-        color:      c.color ?? '#0D1F3C',
+        color:      c.color ?? NAVY,
         count:      c.item_count ?? 0,
         visibility: c.visibility,
       }));
@@ -516,6 +526,7 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
+  // ── Handlers (UNCHANGED) ─────────────────────────────────────────────────
   const toggleFollow = async () => {
     if (!viewerId || viewerId === user.uid) return;
     const next = !isFollowing;
@@ -550,13 +561,6 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
     setEditingCollection(null);
   };
 
-  const handleSignOut = () => {
-    Alert.alert('Sign out', 'Are you sure?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Sign out', style: 'destructive', onPress: () => supabase.auth.signOut() },
-    ]);
-  };
-
   const handleShare = async () => {
     try {
       await Share.share({
@@ -567,26 +571,45 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
     }
   };
 
-  // ── List header sections ──────────────────────────────────────────────────
+  // Page and card background derived from theme
+  const pageBg = theme === 'dark' ? t.bg      : '#FAF7F2';
+  const cardBg = theme === 'dark' ? t.surface : '#FFFFFF';
 
+  // Latest gem = most recent pin — no extra API call
+  const featuredPin = pins[0] ?? null;
+
+  // ── List header ──────────────────────────────────────────────────────────
   const ListHeader = () => (
     <>
-      {/* ── Identity ─────────────────────────────────────────────── */}
-      <View style={[styles.hero, { backgroundColor: t.bg }]}>
-        {(profileData.avatar_url ?? user.photoURL)
-          ? <Image source={{ uri: profileData.avatar_url ?? user.photoURL }} style={styles.avatar} />
-          : <View style={[styles.avatarFallback, { backgroundColor: t.surface }]}>
-              <Ionicons name="person" size={36} color={t.muted} />
-            </View>
-        }
-        <Text style={[styles.displayName, { color: t.text }]}>{displayName}</Text>
-        <Text style={[styles.handle, { color: t.muted }]}>{handle}</Text>
+      {/* ── Hero Card: LEFT-ALIGNED avatar layout ──────────────────── */}
+      <View style={[styles.heroCard, { backgroundColor: cardBg }]}>
+
+        {/* Top row: avatar LEFT + identity block RIGHT — key layout departure */}
+        <View style={styles.heroTopRow}>
+          {avatarUrl
+            ? <Image source={{ uri: avatarUrl }} style={styles.heroAvatar} />
+            : <View style={[styles.heroAvatarFallback, { backgroundColor: t.surface2 }]}>
+                <Ionicons name="person" size={28} color={t.muted} />
+              </View>
+          }
+          <View style={styles.heroIdentity}>
+            <Text style={[styles.heroName, { color: t.text }]} numberOfLines={1}>{displayName}</Text>
+            <Text style={[styles.heroHandle, { color: t.muted }]}>{handle}</Text>
+            {profileData.taste_tagline ? (
+              <View style={[styles.taglineBadge, { backgroundColor: t.surface }]}>
+                <Text style={[styles.taglineText, { color: t.muted }]}>✦ {profileData.taste_tagline}</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+
+        {/* Bio */}
         {profileData.bio ? (
-          <Text style={[styles.bio, { color: t.muted }]}>{profileData.bio}</Text>
+          <Text style={[styles.heroBio, { color: t.muted }]}>{profileData.bio}</Text>
         ) : null}
 
-        {/* Stats */}
-        <View style={[styles.statsRow, { backgroundColor: t.surface }]}>
+        {/* Stats — inside the card, horizontal dividers */}
+        <View style={[styles.heroStats, { borderColor: t.border }]}>
           <View style={styles.stat}>
             <Text style={[styles.statNum, { color: t.text }]}>{pins.length}</Text>
             <Text style={[styles.statLabel, { color: t.muted }]}>gems</Text>
@@ -602,105 +625,158 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
             <Text style={[styles.statLabel, { color: t.muted }]}>following</Text>
           </TouchableOpacity>
         </View>
-      </View>
 
-      {/* ── Actions ──────────────────────────────────────────────── */}
-      <View style={styles.actionsBlock}>
-        {isOwnProfile ? (
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={[styles.editBtn, { borderColor: t.border }]}
-              activeOpacity={0.8}
-              onPress={() => setEditProfileOpen(true)}
-            >
-              <Text style={[styles.editBtnText, { color: t.text }]}>Edit profile</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.iconBtn, { backgroundColor: t.surface }]}
-              onPress={handleShare}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="share-outline" size={17} color={t.text} />
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={[
-                styles.followBtn,
-                isFollowing && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: t.border },
-              ]}
-              onPress={toggleFollow}
-              activeOpacity={0.82}
-            >
-              {isFollowing && (
-                <Ionicons name="checkmark" size={14} color={NAVY} style={{ marginRight: 4 }} />
-              )}
-              <Text style={[styles.followBtnText, isFollowing && { color: NAVY }]}>
-                {isFollowing ? 'Following' : 'Follow'}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.iconBtn, { backgroundColor: t.surface }]}
-              onPress={handleShare}
-              activeOpacity={0.8}
-            >
-              <Ionicons name="share-outline" size={17} color={t.text} />
-            </TouchableOpacity>
-          </View>
-        )}
+        {/* Actions — at the bottom of the hero card */}
+        <View style={styles.heroActions}>
+          {isOwnProfile ? (
+            <>
+              <TouchableOpacity
+                style={[styles.editBtn, { borderColor: t.border }]}
+                activeOpacity={0.8}
+                onPress={() => setEditProfileOpen(true)}
+              >
+                <Ionicons name="create-outline" size={14} color={t.text} />
+                <Text style={[styles.editBtnText, { color: t.text }]}>Edit profile</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.iconBtn, { backgroundColor: t.surface }]} onPress={handleShare} activeOpacity={0.8}>
+                <Ionicons name="share-outline" size={17} color={t.text} />
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              <TouchableOpacity
+                style={[styles.followBtn, isFollowing && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: t.border }]}
+                onPress={toggleFollow}
+                activeOpacity={0.82}
+              >
+                {isFollowing && <Ionicons name="checkmark" size={14} color={NAVY} style={{ marginRight: 5 }} />}
+                <Text style={[styles.followBtnText, isFollowing && { color: NAVY }]}>
+                  {isFollowing ? 'Following' : 'Follow'}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.iconBtn, { backgroundColor: t.surface }]} onPress={handleShare} activeOpacity={0.8}>
+                <Ionicons name="share-outline" size={17} color={t.text} />
+              </TouchableOpacity>
+            </>
+          )}
+        </View>
 
-        {/* Taste tagline */}
-        {profileData.taste_tagline ? (
-          <Text style={[styles.socialProof, { color: t.muted }]}>
-            ✦{'  '}{profileData.taste_tagline}
-          </Text>
+        {/* Join year — subtle, inside the card at the very bottom */}
+        {joinYear ? (
+          <Text style={[styles.joinDate, { color: t.muted }]}>on gem since {joinYear}</Text>
         ) : null}
       </View>
 
-      {/* ── Taste tags ───────────────────────────────────────────── */}
-      {profileData.taste_tags?.length > 0 ? (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tasteScroll}
-        >
-          {profileData.taste_tags.map(tag => (
-            <View key={tag} style={[styles.tasteTag, { backgroundColor: t.surface }]}>
-              <Text style={[styles.tasteTagText, { color: t.muted }]}>{tag}</Text>
+      {/* ── Taste Snapshot Card ────────────────────────────────── */}
+      {(profileData.taste_tags?.length > 0 || topCats.length > 0) ? (
+        <View style={[styles.tasteCard, { backgroundColor: cardBg }]}>
+          <View style={styles.tasteTitleRow}>
+            <Text style={[styles.tasteCardTitle, { color: t.text }]}>taste snapshot</Text>
+            <Text style={[styles.tasteStar, { color: t.muted }]}>✦</Text>
+          </View>
+
+          {profileData.taste_tags?.length > 0 && (
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tasteScroll}>
+              {profileData.taste_tags.map((tag, i) => {
+                const accent = TAG_COLORS[i % TAG_COLORS.length];
+                return (
+                  <View key={tag} style={[styles.tasteTag, { backgroundColor: accent + '18', borderColor: accent + '30' }]}>
+                    <Text style={[styles.tasteTagText, { color: accent }]}>{tag}</Text>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
+
+          {topCats.length > 0 && (
+            <View style={styles.topCatRow}>
+              <Text style={[styles.topCatLabel, { color: t.muted }]}>usually saves</Text>
+              <View style={styles.topCatChips}>
+                {topCats.map(cat => (
+                  <View key={cat.id} style={[styles.topCatChip, { backgroundColor: cat.color + '14' }]}>
+                    <Ionicons name={cat.icon} size={11} color={cat.color} />
+                    <Text style={[styles.topCatChipText, { color: cat.color }]}>{cat.label}</Text>
+                  </View>
+                ))}
+              </View>
             </View>
-          ))}
-        </ScrollView>
+          )}
+        </View>
       ) : null}
 
-      {/* ── Collections preview ──────────────────────────────────── */}
+      {/* ── Latest Gem featured card ───────────────────────────── */}
+      {(featuredPin || isOwnProfile) ? (
+        <View style={styles.featuredSection}>
+          <Text style={[styles.sectionMicrolabel, { color: t.muted }]}>LATEST GEM</Text>
+          {featuredPin ? (
+            <TouchableOpacity
+              style={[styles.featuredCard, { backgroundColor: cardBg }]}
+              onPress={() => navigation.navigate('PinDetail', { pinId: featuredPin.id, userId: user.uid })}
+              activeOpacity={0.88}
+            >
+              {featuredPin.photoURL
+                ? <Image source={{ uri: featuredPin.photoURL }} style={styles.featuredPhoto} resizeMode="cover" />
+                : <View style={[styles.featuredPhotoPlaceholder, { backgroundColor: getCat(featuredPin.category).color + '18' }]}>
+                    <Ionicons name={getCat(featuredPin.category).icon} size={44} color={getCat(featuredPin.category).color + '60'} />
+                  </View>
+              }
+              <View style={styles.featuredBody}>
+                <View style={[styles.catPill, { backgroundColor: getCat(featuredPin.category).color + '18' }]}>
+                  <Ionicons name={getCat(featuredPin.category).icon} size={10} color={getCat(featuredPin.category).color} />
+                  <Text style={[styles.catPillText, { color: getCat(featuredPin.category).color }]}>{getCat(featuredPin.category).label}</Text>
+                </View>
+                <Text style={[styles.featuredTitle, { color: t.text }]} numberOfLines={2}>{featuredPin.title}</Text>
+                {featuredPin.note ? (
+                  <Text style={[styles.featuredNote, { color: t.muted }]} numberOfLines={2}>"{featuredPin.note}"</Text>
+                ) : null}
+                {featuredPin.locationName ? (
+                  <View style={styles.featuredLoc}>
+                    <Ionicons name="location-outline" size={12} color={t.muted} />
+                    <Text style={[styles.featuredLocText, { color: t.muted }]} numberOfLines={1}>{featuredPin.locationName}</Text>
+                  </View>
+                ) : null}
+              </View>
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.emptyGemCard, { borderColor: t.border }]}>
+              <Text style={styles.emptyGemGlyph}>✦</Text>
+              <Text style={[styles.emptyGemTitle, { color: t.muted }]}>No gems yet</Text>
+              {isOwnProfile && <Text style={[styles.emptyGemSub, { color: t.muted }]}>Tap + to leave your first gem</Text>}
+            </View>
+          )}
+        </View>
+      ) : null}
+
+      {/* ── Curated Collections ───────────────────────────────── */}
       {(isOwnProfile || userCollections.length > 0) ? (
         <View style={styles.collectionsSection}>
-          <View style={styles.collectionsHeader}>
-            <Text style={[styles.collectionsLabel, { color: t.muted }]}>COLLECTIONS</Text>
+          <View style={styles.sectionTitleRow}>
+            <Text style={[styles.sectionMicrolabel, { color: t.muted }]}>CURATED COLLECTIONS</Text>
+            {userCollections.length > 0 && (
+              <View style={[styles.countBadge, { backgroundColor: t.surface }]}>
+                <Text style={[styles.countBadgeText, { color: t.muted }]}>{userCollections.length}</Text>
+              </View>
+            )}
           </View>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.collectionsScroll}
-          >
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.collectionsScroll}>
             {userCollections.map(coll => (
               <View key={coll.id} style={{ position: 'relative' }}>
                 <TouchableOpacity
-                  style={[styles.collCard, { backgroundColor: t.surface, borderColor: t.border }]}
+                  style={[styles.collCard, { backgroundColor: cardBg }]}
                   activeOpacity={0.8}
                   onPress={() => navigation.navigate('CollectionDetail', { collection: coll, userId: user.uid })}
                 >
-                  <View style={[styles.collIconWrap, { backgroundColor: (coll.color ?? NAVY) + '14' }]}>
-                    <Ionicons name={coll.icon ?? 'bookmark-outline'} size={15} color={coll.color ?? NAVY} />
+                  <View style={[styles.collIconWrap, { backgroundColor: (coll.color ?? NAVY) + '16' }]}>
+                    <Ionicons name={coll.icon ?? 'bookmark-outline'} size={20} color={coll.color ?? NAVY} />
                   </View>
                   <Text style={[styles.collName, { color: t.text }]} numberOfLines={2}>{coll.name}</Text>
                   <View style={styles.collFooter}>
-                    <Text style={[styles.collCount, { color: t.muted }]}>{coll.count} gems</Text>
+                    <Text style={[styles.collCount, { color: t.muted }]}>{coll.count} {coll.count === 1 ? 'gem' : 'gems'}</Text>
+                    {coll.visibility === 'public' && (
+                      <View style={styles.visBadge}><Text style={styles.visBadgeText}>public</Text></View>
+                    )}
                     {coll.visibility === 'shared' && (
-                      <View style={styles.sharedDot}>
-                        <Ionicons name="people-outline" size={9} color={NAVY} />
-                      </View>
+                      <View style={styles.sharedDot}><Ionicons name="people-outline" size={9} color={NAVY} /></View>
                     )}
                   </View>
                 </TouchableOpacity>
@@ -731,28 +807,34 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
         </View>
       ) : null}
 
-      {/* ── Gems section header ──────────────────────────────────── */}
-      <View style={[styles.gemsSectionHeader, { borderTopColor: t.border }]}>
-        <Text style={[styles.gemsSectionTitle, { color: t.text }]}>
-          {isOwnProfile ? 'your gems' : `${firstName}'s gems`}
-        </Text>
-        <Text style={[styles.gemsSectionCount, { color: t.muted }]}>{pins.length}</Text>
-      </View>
+      {/* ── Places Shared section header ──────────────────────── */}
+      {pins.length > 0 && (
+        <View style={[styles.gemsSectionHeader, { borderTopColor: t.border }]}>
+          <Text style={[styles.gemsSectionTitle, { color: t.text }]}>
+            {isOwnProfile ? 'places shared' : `${firstName}'s places`}
+          </Text>
+          <View style={[styles.countBadge, { backgroundColor: t.surface }]}>
+            <Text style={[styles.countBadgeText, { color: t.muted }]}>{pins.length}</Text>
+          </View>
+        </View>
+      )}
     </>
   );
 
+  // ── Empty state (no gems at all) ─────────────────────────────────────────
   const ListEmpty = () => (
     <View style={styles.emptyState}>
-      <Text style={styles.emptyGem}>✦</Text>
-      <Text style={[styles.emptyText, { color: t.muted }]}>No gems yet — leave one!</Text>
+      <Text style={styles.emptyGemGlyph}>✦</Text>
+      <Text style={[styles.emptyText, { color: t.muted }]}>No gems yet</Text>
     </View>
   );
 
+  // ── Pin card ─────────────────────────────────────────────────────────────
   const renderPin = ({ item: pin }) => {
     const cat = getCat(pin.category);
     return (
       <TouchableOpacity
-        style={[styles.pinCard, { backgroundColor: t.surface }]}
+        style={[styles.pinCard, { backgroundColor: cardBg }]}
         onPress={() => navigation.navigate('PinDetail', { pinId: pin.id, userId: user.uid })}
         activeOpacity={0.85}
       >
@@ -768,36 +850,30 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
             <Text style={[styles.catPillText, { color: cat.color }]}>{cat.label}</Text>
           </View>
           <Text style={[styles.pinTitle, { color: t.text }]} numberOfLines={1}>{pin.title}</Text>
-          {pin.note
-            ? <Text style={[styles.pinNote, { color: t.muted }]} numberOfLines={1}>"{pin.note}"</Text>
-            : null}
-          {pin.locationName
-            ? <View style={styles.locRow}>
-                <Ionicons name="location-outline" size={11} color={t.muted} />
-                <Text style={[styles.locText, { color: t.muted }]} numberOfLines={1}>{pin.locationName}</Text>
-              </View>
-            : null}
+          {pin.note ? <Text style={[styles.pinNote, { color: t.muted }]} numberOfLines={1}>"{pin.note}"</Text> : null}
+          {pin.locationName ? (
+            <View style={styles.locRow}>
+              <Ionicons name="location-outline" size={11} color={t.muted} />
+              <Text style={[styles.locText, { color: t.muted }]} numberOfLines={1}>{pin.locationName}</Text>
+            </View>
+          ) : null}
         </View>
       </TouchableOpacity>
     );
   };
 
+  // ── Render ───────────────────────────────────────────────────────────────
   return (
-    <View style={[styles.container, { backgroundColor: t.bg }]}>
-      <SafeAreaView edges={['top']} style={{ backgroundColor: t.bg }}>
-        <View style={[styles.headerBar, { borderBottomColor: t.border }]}>
-          <TouchableOpacity
-            style={[styles.navBtn, { backgroundColor: t.surface }]}
-            onPress={() => navigation.goBack()}
-          >
+    <View style={[styles.container, { backgroundColor: pageBg }]}>
+      <SafeAreaView edges={['top']} style={{ backgroundColor: pageBg }}>
+        {/* Nav: back (left) + settings (right). No centered title — hero card makes context clear. */}
+        <View style={styles.headerBar}>
+          <TouchableOpacity style={[styles.navBtn, { backgroundColor: t.surface }]} onPress={() => navigation.goBack()}>
             <Ionicons name="chevron-back" size={18} color={t.text} />
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: t.text }]}>profile</Text>
+          <View style={{ flex: 1 }} />
           {isOwnProfile
-            ? <TouchableOpacity
-                style={[styles.navBtn, { backgroundColor: t.surface }]}
-                onPress={() => navigation.navigate('Settings')}
-              >
+            ? <TouchableOpacity style={[styles.navBtn, { backgroundColor: t.surface }]} onPress={() => navigation.navigate('Settings')}>
                 <Ionicons name="settings-outline" size={17} color={t.muted} />
               </TouchableOpacity>
             : <View style={{ width: 34 }} />
@@ -813,9 +889,7 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
         ListEmptyComponent={ListEmpty}
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.muted} />
-        }
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={t.muted} />}
       />
 
       <SaveToCollectionModal
@@ -824,14 +898,12 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
         onClose={() => setCollectionModalOpen(false)}
         onCollectionCreated={coll => setUserCollections(prev => [...prev, coll])}
       />
-
       <EditCollectionModal
         collection={editingCollection}
         onSave={handleSaveCollection}
         onDelete={handleDeleteCollection}
         onClose={() => setEditingCollection(null)}
       />
-
       <EditProfileModal
         visible={editProfileOpen}
         profileData={profileData}
@@ -839,7 +911,6 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
         onSave={updated => { setProfileData(updated); setEditProfileOpen(false); onProfileUpdate?.(); }}
         onClose={() => setEditProfileOpen(false)}
       />
-
       <FollowListModal
         visible={followListModal.visible}
         type={followListModal.type}
@@ -855,88 +926,168 @@ export default function Profile({ navigation, route, theme, onProfileUpdate }) {
   );
 }
 
+// ─── Main styles ──────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
-  // Top nav
+  // ── Nav bar ───────────────────────────────────────────────────────────────
   headerBar: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1,
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: 16, paddingVertical: 12,
   },
-  headerTitle: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3 },
   navBtn: { width: 34, height: 34, borderRadius: 17, alignItems: 'center', justifyContent: 'center' },
 
-  // Identity
-  hero: { alignItems: 'center', paddingTop: 32, paddingBottom: 24, paddingHorizontal: 24 },
-  avatar: { width: 88, height: 88, borderRadius: 44, marginBottom: 12 },
-  avatarFallback: {
-    width: 88, height: 88, borderRadius: 44, marginBottom: 12,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  displayName: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
-  handle: { fontSize: 14, marginTop: 4 },
-  bio: {
-    fontSize: 13, textAlign: 'center', lineHeight: 19,
-    marginTop: 8, paddingHorizontal: 16,
+  // ── Hero Card (white, left-aligned layout) ────────────────────────────────
+  heroCard: {
+    marginHorizontal: 16, marginTop: 12, marginBottom: 12,
+    borderRadius: 24, padding: 18,
+    shadowColor: '#000', shadowOpacity: 0.07, shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 }, elevation: 2,
   },
 
-  // Stats
-  statsRow: {
+  // Horizontal row: avatar LEFT, identity RIGHT
+  heroTopRow: {
+    flexDirection: 'row', alignItems: 'flex-start',
+    gap: 14, marginBottom: 14,
+  },
+  heroAvatar: {
+    width: 72, height: 72, borderRadius: 20, flexShrink: 0,
+  },
+  heroAvatarFallback: {
+    width: 72, height: 72, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+  },
+  heroIdentity: { flex: 1, paddingTop: 2 },
+  heroName:   { fontSize: 20, fontWeight: '800', letterSpacing: -0.5, marginBottom: 2 },
+  heroHandle: { fontSize: 13, marginBottom: 8 },
+  taglineBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 9, paddingVertical: 4,
+    borderRadius: 100,
+  },
+  taglineText: { fontSize: 11, fontStyle: 'italic', fontWeight: '500' },
+
+  heroBio: { fontSize: 13, lineHeight: 19, marginBottom: 14 },
+
+  // Stats: top + bottom border, 3-column
+  heroStats: {
     flexDirection: 'row', alignItems: 'center',
-    borderRadius: 18, paddingVertical: 16, paddingHorizontal: 16,
-    gap: 0, marginTop: 20, width: '100%',
+    borderTopWidth: 1, borderBottomWidth: 1,
+    paddingVertical: 12, marginBottom: 14,
   },
-  stat: { alignItems: 'center', flex: 1 },
-  statNum: { fontSize: 22, fontWeight: '800', letterSpacing: -0.5 },
-  statLabel: { fontSize: 12, marginTop: 2 },
-  statDivider: { width: 1, height: 28 },
+  stat:       { flex: 1, alignItems: 'center' },
+  statNum:    { fontSize: 20, fontWeight: '800', letterSpacing: -0.5 },
+  statLabel:  { fontSize: 11, marginTop: 2, letterSpacing: 0.1 },
+  statDivider:{ width: 1, height: 22 },
 
-  // Actions
-  actionsBlock: {
-    paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, gap: 10,
+  heroActions: { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  editBtn: {
+    flex: 1, borderWidth: 1.5, borderRadius: 100,
+    paddingVertical: 11,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
   },
-  actionsRow: { flexDirection: 'row', gap: 10 },
+  editBtnText:  { fontSize: 14, fontWeight: '600' },
   followBtn: {
-    flex: 1, backgroundColor: NAVY, borderRadius: 12, paddingVertical: 11,
+    flex: 1, backgroundColor: NAVY, borderRadius: 100, paddingVertical: 11,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
   },
   followBtnText: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
-  editBtn: {
-    flex: 1, borderWidth: 1.5, borderRadius: 12,
-    paddingVertical: 11, alignItems: 'center',
-  },
-  editBtnText: { fontSize: 14, fontWeight: '600' },
   iconBtn: {
-    width: 44, height: 44, borderRadius: 12,
+    width: 46, height: 46, borderRadius: 100,
     alignItems: 'center', justifyContent: 'center',
   },
-  socialProof: { fontSize: 12, textAlign: 'center', lineHeight: 17 },
+  joinDate: { fontSize: 11, textAlign: 'center', letterSpacing: 0.1 },
 
-  // Taste tags
-  tasteScroll: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 2, gap: 8 },
-  tasteTag: { paddingHorizontal: 13, paddingVertical: 7, borderRadius: 100 },
-  tasteTagText: { fontSize: 12, fontWeight: '500' },
-
-  // Collections
-  collectionsSection: { paddingBottom: 8 },
-  collectionsHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingBottom: 10,
+  // ── Taste Snapshot Card ───────────────────────────────────────────────────
+  tasteCard: {
+    marginHorizontal: 16, marginBottom: 12,
+    borderRadius: 20, padding: 16, gap: 12,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10,
+    shadowOffset: { width: 0, height: 3 }, elevation: 1,
   },
-  collectionsLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8 },
-  editCollectionsBtn: { fontSize: 13, fontWeight: '600' },
+  tasteTitleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+  },
+  tasteCardTitle: { fontSize: 14, fontWeight: '700', letterSpacing: -0.2 },
+  tasteStar: { fontSize: 16 },
+  tasteScroll: { gap: 8, paddingRight: 4 },
+  tasteTag: {
+    paddingHorizontal: 14, paddingVertical: 8,
+    borderRadius: 100, borderWidth: 1,
+  },
+  tasteTagText: { fontSize: 13, fontWeight: '600' },
+  topCatRow: {
+    flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 8,
+  },
+  topCatLabel: { fontSize: 12, fontWeight: '500' },
+  topCatChips: { flexDirection: 'row', gap: 6, flexWrap: 'wrap' },
+  topCatChip: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 10, paddingVertical: 5, borderRadius: 100,
+  },
+  topCatChipText: { fontSize: 11, fontWeight: '600' },
+
+  // ── Latest Gem / Featured ─────────────────────────────────────────────────
+  featuredSection: { marginHorizontal: 16, marginBottom: 12 },
+  featuredCard: {
+    borderRadius: 18, overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 4 }, elevation: 2,
+  },
+  featuredPhoto: { width: '100%', aspectRatio: 16 / 7 },
+  featuredPhotoPlaceholder: {
+    width: '100%', aspectRatio: 16 / 7,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  featuredBody: { padding: 14, gap: 5 },
+  featuredTitle: { fontSize: 16, fontWeight: '700', letterSpacing: -0.3 },
+  featuredNote: { fontSize: 13, fontStyle: 'italic', lineHeight: 18 },
+  featuredLoc: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 },
+  featuredLocText: { fontSize: 12 },
+
+  // Empty gem state
+  emptyGemCard: {
+    borderWidth: 1.5, borderStyle: 'dashed', borderRadius: 18,
+    paddingVertical: 32, alignItems: 'center', gap: 6,
+  },
+  emptyGemGlyph: { fontSize: 28, color: '#C4A882' },
+  emptyGemTitle: { fontSize: 14, fontWeight: '600' },
+  emptyGemSub: { fontSize: 12 },
+
+  // ── Shared section helpers ────────────────────────────────────────────────
+  sectionMicrolabel: {
+    fontSize: 10.5, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase',
+  },
+  sectionTitleRow: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, marginBottom: 10,
+  },
+  countBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 100 },
+  countBadgeText: { fontSize: 12, fontWeight: '600' },
+
+  // ── Curated Collections ───────────────────────────────────────────────────
+  collectionsSection: { marginBottom: 12 },
   collectionsScroll: { paddingHorizontal: 16, gap: 10, paddingBottom: 4 },
-  collCard: { width: 130, borderRadius: 14, borderWidth: 1, padding: 14, gap: 4 },
+  collCard: {
+    width: 155, borderRadius: 18,
+    padding: 16, gap: 4,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 1,
+    padding: 14, gap: 4,
+    shadowColor: '#000', shadowOpacity: 0.04,
+    shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
+  },
   collCardNew: {
-    width: 130, borderRadius: 14, borderWidth: 1, borderStyle: 'dashed',
-    padding: 14, gap: 6, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'transparent',
+    width: 155, borderRadius: 18, borderWidth: 1, borderStyle: 'dashed',
+    padding: 16, gap: 6, alignItems: 'center', justifyContent: 'center',
+    backgroundColor: 'transparent', minHeight: 120,
   },
   collNewPlus: {
-    width: 36, height: 36, borderRadius: 18,
+    width: 40, height: 40, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
   },
-  collNewLabel: { fontSize: 12, fontWeight: '600' },
+  collNewLabel: { fontSize: 13, fontWeight: '600' },
   collEditIcon: {
     position: 'absolute', top: 8, right: 8,
     width: 22, height: 22, borderRadius: 11,
@@ -944,38 +1095,42 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
   },
   collIconWrap: {
-    width: 30, height: 30, borderRadius: 8,
-    alignItems: 'center', justifyContent: 'center', marginBottom: 6,
+    width: 38, height: 38, borderRadius: 12,
+    alignItems: 'center', justifyContent: 'center', marginBottom: 8,
   },
-  collName: { fontSize: 13, fontWeight: '700', letterSpacing: -0.2 },
-  collFooter: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2 },
+  collName: { fontSize: 14, fontWeight: '700', letterSpacing: -0.2 },
+  collFooter: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 2, flexWrap: 'wrap' },
   collCount: { fontSize: 11 },
+  visBadge: {
+    backgroundColor: 'rgba(13,31,60,0.07)',
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 100,
+  },
+  visBadgeText: { fontSize: 10, fontWeight: '600', color: NAVY },
   sharedDot: {
     width: 16, height: 16, borderRadius: 8,
     backgroundColor: 'rgba(45,63,92,0.08)',
     alignItems: 'center', justifyContent: 'center',
   },
 
-  // Gems section
+  // ── Places Shared section header ──────────────────────────────────────────
   gemsSectionHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingVertical: 14,
-    borderTopWidth: 1, marginTop: 8,
+    borderTopWidth: 1, marginTop: 4,
   },
-  gemsSectionTitle: { fontSize: 18, fontWeight: '800', letterSpacing: -0.5 },
-  gemsSectionCount: { fontSize: 13, fontWeight: '600' },
+  gemsSectionTitle: { fontSize: 17, fontWeight: '800', letterSpacing: -0.4 },
 
-  list: { paddingBottom: 40 },
+  list: { paddingBottom: 48 },
 
-  // Pin cards
+  // ── Pin cards ─────────────────────────────────────────────────────────────
   pinCard: {
     marginHorizontal: 16, marginBottom: 10,
     borderRadius: 16, overflow: 'hidden', flexDirection: 'row',
-    shadowColor: '#1C1714', shadowOpacity: 0.06, shadowRadius: 8,
+    shadowColor: '#1C1714', shadowOpacity: 0.05, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 1,
   },
-  pinPhoto: { width: 88, height: 88 },
-  pinPhotoPlaceholder: { width: 88, height: 88, alignItems: 'center', justifyContent: 'center' },
+  pinPhoto: { width: 92, height: 92 },
+  pinPhotoPlaceholder: { width: 92, height: 92, alignItems: 'center', justifyContent: 'center' },
   pinInfo: { flex: 1, padding: 12, gap: 4, justifyContent: 'center' },
   pinTitle: { fontSize: 15, fontWeight: '700' },
   pinNote: { fontSize: 12, fontStyle: 'italic' },
@@ -984,34 +1139,17 @@ const styles = StyleSheet.create({
   catPill: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 100,
+    alignSelf: 'flex-start',
   },
-  catPillText: { fontSize: 12, fontWeight: '600' },
+  catPillText: { fontSize: 11, fontWeight: '600' },
 
-  emptyState: { alignItems: 'center', padding: 40, gap: 10 },
-  emptyGem: { fontSize: 36, color: '#C4A882' },
-  emptyText: { fontSize: 14, textAlign: 'center' },
-
-  // Settings / Community Guide row
-  settingsSection: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 4 },
-  settingsRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    borderRadius: 14, borderWidth: 1, paddingVertical: 14,
-    paddingHorizontal: 14,
-  },
-  settingsIconWrap: {
-    width: 36, height: 36, borderRadius: 10,
-    backgroundColor: 'rgba(122,159,194,0.14)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  settingsRowTitle: { fontSize: 15, fontWeight: '600', letterSpacing: -0.1 },
-  settingsRowSub:   { fontSize: 12, marginTop: 1 },
+  emptyState: { alignItems: 'center', paddingTop: 40, gap: 10 },
+  emptyText:  { fontSize: 14, textAlign: 'center' },
 });
 
+// ─── EditCollectionModal styles — UNCHANGED ───────────────────────────────────
 const eStyles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.48)',
-  },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.48)' },
   sheet: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
     backgroundColor: '#FFFFFF',
@@ -1035,37 +1173,20 @@ const eStyles = StyleSheet.create({
   optionTitle: { fontSize: 15, fontWeight: '600', color: '#1C1714', marginBottom: 2 },
   optionSub: { fontSize: 12, color: MUTED_C, lineHeight: 16 },
   divider: { height: 1, backgroundColor: 'rgba(28,23,20,0.07)', marginVertical: 12 },
-  friendList: { marginTop: 10, gap: 4 },
-  friendRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 8, paddingHorizontal: 4 },
-  friendAvatar: { width: 34, height: 34, borderRadius: 17 },
-  friendName: { flex: 1, fontSize: 14, fontWeight: '500', color: '#1C1714' },
-  friendCheck: {
-    width: 22, height: 22, borderRadius: 11,
-    borderWidth: 1.5, borderColor: 'rgba(28,23,20,0.20)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  friendCheckSel: { backgroundColor: NAVY, borderColor: NAVY },
   deleteBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderWidth: 1.5, borderColor: 'rgba(192,57,43,0.25)', borderRadius: 12,
     paddingVertical: 12,
   },
   deleteBtnText: { fontSize: 14, fontWeight: '600', color: '#C0392B' },
-  saveBtn: {
-    backgroundColor: NAVY, borderRadius: 100,
-    paddingVertical: 15, alignItems: 'center',
-  },
+  saveBtn: { backgroundColor: NAVY, borderRadius: 100, paddingVertical: 15, alignItems: 'center' },
   saveBtnText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
 });
 
+// ─── EditProfileModal styles — UNCHANGED ─────────────────────────────────────
 const epStyles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.48)',
-  },
-  kavWrapper: {
-    flex: 1, justifyContent: 'flex-end',
-  },
+  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.48)' },
+  kavWrapper: { flex: 1, justifyContent: 'flex-end' },
   sheet: {
     backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 26, borderTopRightRadius: 26,
@@ -1078,8 +1199,6 @@ const epStyles = StyleSheet.create({
     alignSelf: 'center', marginBottom: 12,
   },
   title: { fontSize: 18, fontWeight: '800', color: NAVY, letterSpacing: -0.4, marginBottom: 16 },
-
-  // Avatar
   avatarWrap: { alignSelf: 'center', marginBottom: 20, position: 'relative' },
   avatar: { width: 80, height: 80, borderRadius: 40 },
   avatarFallback: {
@@ -1093,8 +1212,6 @@ const epStyles = StyleSheet.create({
     backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: '#FFFFFF',
   },
-
-  // Fields
   fieldLabel: {
     fontSize: 12, fontWeight: '700', color: MUTED_C,
     letterSpacing: 0.5, marginBottom: 6, marginTop: 14,
@@ -1110,8 +1227,6 @@ const epStyles = StyleSheet.create({
     fontSize: 15, color: NAVY, marginBottom: 2,
   },
   inputMulti: { height: 80, textAlignVertical: 'top' },
-
-  // Tags
   tagsWrap: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 },
   tagChip: {
     flexDirection: 'row', alignItems: 'center',
@@ -1124,11 +1239,25 @@ const epStyles = StyleSheet.create({
     width: 44, height: 44, borderRadius: 12,
     backgroundColor: NAVY, alignItems: 'center', justifyContent: 'center',
   },
-
-  // Save
-  saveBtn: {
-    backgroundColor: NAVY, borderRadius: 100,
-    paddingVertical: 15, alignItems: 'center', marginTop: 12,
-  },
+  saveBtn: { backgroundColor: NAVY, borderRadius: 100, paddingVertical: 15, alignItems: 'center', marginTop: 12 },
   saveBtnText: { fontSize: 15, fontWeight: '700', color: '#FFFFFF' },
+});
+
+// ─── FollowListModal styles — UNCHANGED ──────────────────────────────────────
+const flStyles = StyleSheet.create({
+  backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.35)' },
+  sheet: {
+    backgroundColor: '#fff', borderTopLeftRadius: 24, borderTopRightRadius: 24,
+    paddingTop: 12, paddingHorizontal: 20, paddingBottom: 40, maxHeight: '70%',
+  },
+  handle: { width: 36, height: 4, borderRadius: 2, backgroundColor: 'rgba(13,31,60,0.12)', alignSelf: 'center', marginBottom: 16 },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 },
+  title: { fontSize: 17, fontWeight: '700', color: NAVY },
+  empty: { textAlign: 'center', color: 'rgba(28,23,20,0.38)', fontSize: 14, marginTop: 32, marginBottom: 24 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10 },
+  avatar: { width: 40, height: 40, borderRadius: 20 },
+  avatarFallback: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  rowBody: { flex: 1 },
+  name: { fontSize: 14, fontWeight: '600' },
+  handleText: { fontSize: 12, marginTop: 1 },
 });
