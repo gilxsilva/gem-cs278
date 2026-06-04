@@ -147,6 +147,7 @@ export default function SaveToCollectionModal({ visible, pin, userId, onClose, o
   useEffect(() => {
     if (!visible) return;
     setIsCreating(false);
+    setSavedIds(new Set()); // always reset — never carry state from a previous pin
     slideAnim.setValue(600);
     Animated.spring(slideAnim, {
       toValue: 0, useNativeDriver: true, bounciness: 2, speed: 16,
@@ -157,22 +158,30 @@ export default function SaveToCollectionModal({ visible, pin, userId, onClose, o
       return;
     }
     setLoading(true);
-    supabase
-      .from('collections')
-      .select('id, name, visibility, item_count')
-      .eq('owner_id', userId)
-      .order('created_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) console.error('Collections fetch error:', error.message);
-        setCollections((data ?? []).map(c => ({
-          id:         c.id,
-          name:       c.name,
-          visibility: c.visibility,
-          count:      c.item_count ?? 0,
-        })));
-        setLoading(false);
-      });
-  }, [visible, userId]);
+
+    Promise.all([
+      supabase
+        .from('collections')
+        .select('id, name, visibility, item_count')
+        .eq('owner_id', userId)
+        .order('created_at', { ascending: false }),
+      // Fetch which of this user's collections already contain the current pin
+      supabase
+        .from('collection_gems')
+        .select('collection_id')
+        .eq('gem_id', pin?.id ?? ''),
+    ]).then(([collectionsRes, savedRes]) => {
+      if (collectionsRes.error) console.error('Collections fetch error:', collectionsRes.error.message);
+      setCollections((collectionsRes.data ?? []).map(c => ({
+        id:         c.id,
+        name:       c.name,
+        visibility: c.visibility,
+        count:      c.item_count ?? 0,
+      })));
+      setSavedIds(new Set((savedRes.data ?? []).map(r => r.collection_id)));
+      setLoading(false);
+    });
+  }, [visible, userId, pin?.id]);
 
   const handleClose = () => {
     Animated.timing(slideAnim, {
@@ -208,8 +217,6 @@ export default function SaveToCollectionModal({ visible, pin, userId, onClose, o
           .from('collection_gems')
           .upsert({ collection_id: coll.id, gem_id: pin.id });
         if (error) console.error('Save to collection error:', error.message);
-        else await supabase.from('collections')
-          .update({ item_count: coll.count + 1 }).eq('id', coll.id).eq('owner_id', userId);
       } else {
         const { error } = await supabase
           .from('collection_gems')
@@ -217,9 +224,14 @@ export default function SaveToCollectionModal({ visible, pin, userId, onClose, o
           .eq('collection_id', coll.id)
           .eq('gem_id', pin.id);
         if (error) console.error('Remove from collection error:', error.message);
-        else await supabase.from('collections')
-          .update({ item_count: Math.max(0, coll.count - 1) }).eq('id', coll.id).eq('owner_id', userId);
       }
+      // Recount from the actual rows so item_count never drifts out of sync
+      const { count } = await supabase
+        .from('collection_gems')
+        .select('*', { count: 'exact', head: true })
+        .eq('collection_id', coll.id);
+      await supabase.from('collections')
+        .update({ item_count: count ?? 0 }).eq('id', coll.id).eq('owner_id', userId);
     }
   };
 
