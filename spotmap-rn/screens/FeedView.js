@@ -9,6 +9,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabase';
 import { getCat, CATEGORIES, THEMES } from '../constants';
 import SaveToCollectionModal from '../components/SaveToCollectionModal';
+import ReportModal from '../components/ReportModal';
 
 // Supports both Supabase storage paths and full external URLs (used in seed data)
 function resolveImageUrl(path) {
@@ -37,6 +38,7 @@ export default function FeedView({ navigation, user, theme }) {
   const [refreshing, setRefreshing] = useState(false);
   const [activeFilter, setActiveFilter] = useState('all');
   const [collectionModal, setCollectionModal] = useState({ visible: false, pin: null });
+  const [reportModal, setReportModal] = useState({ visible: false, gemId: null });
   const [bookmarked, setBookmarked] = useState({});
   const t = THEMES[theme];
   const isGuest = user.uid === 'guest';
@@ -139,17 +141,7 @@ useFocusEffect(
   };
 
   const reportPin = (pin) => {
-    const submitReport = async (reason) => {
-      await supabase.from('reports').insert({ reporter_id: user.uid, gem_id: pin.id, reason });
-      Alert.alert('Thanks for reporting', "We'll review this gem shortly.");
-    };
-    Alert.alert('Report gem', 'Why are you reporting this?', [
-      { text: 'Spam', onPress: () => submitReport('spam') },
-      { text: 'Inappropriate content', onPress: () => submitReport('inappropriate') },
-      { text: 'Misinformation', onPress: () => submitReport('misinformation') },
-      { text: 'Other', onPress: () => submitReport('other') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
+    setReportModal({ visible: true, gemId: pin.id });
   };
 
   const sharePin = async (pin) => {
@@ -454,6 +446,13 @@ useFocusEffect(
         userId={user.uid}
         onClose={() => setCollectionModal(prev => ({ ...prev, visible: false }))}
         onSave={(pinId, ids) => setBookmarked(prev => ({ ...prev, [pinId]: ids.length > 0 }))}
+      />
+
+      <ReportModal
+        visible={reportModal.visible}
+        gemId={reportModal.gemId}
+        userId={user.uid}
+        onClose={() => setReportModal({ visible: false, gemId: null })}
       />
 
     </View>

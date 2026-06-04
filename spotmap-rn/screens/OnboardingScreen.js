@@ -157,6 +157,66 @@ const cc = StyleSheet.create({
   sub:  { fontSize: 11, color: MUTED },
 });
 
+// ─── Step 5b: safety card ────────────────────────────────────────────────────
+function SafetyCard() {
+  return (
+    <View style={sf.wrap}>
+      <View style={sf.card}>
+        <View style={sf.row}>
+          <View style={sf.iconWrap}>
+            <Ionicons name="ellipsis-horizontal-circle-outline" size={17} color={NAVY} />
+          </View>
+          <View style={sf.textWrap}>
+            <Text style={sf.label}>Tap the ··· menu on any gem</Text>
+            <Text style={sf.sub}>Then choose "Report gem" and pick a reason.</Text>
+          </View>
+        </View>
+
+        <View style={[sf.row, sf.rowBorder]}>
+          <View style={sf.iconWrap}>
+            <Ionicons name="shield-checkmark-outline" size={17} color={NAVY} />
+          </View>
+          <View style={sf.textWrap}>
+            <Text style={sf.label}>Reviewed by Eva, Yujen, and Gil</Text>
+            <Text style={sf.sub}>Every report goes to the Gem team directly.</Text>
+          </View>
+        </View>
+
+        <View style={[sf.row, sf.rowBorder]}>
+          <View style={sf.iconWrap}>
+            <Ionicons name="people-outline" size={17} color={NAVY} />
+          </View>
+          <View style={sf.textWrap}>
+            <Text style={sf.label}>Keep it honest and useful</Text>
+            <Text style={sf.sub}>Spam, misinformation, or a place that doesn't exist — all worth flagging.</Text>
+          </View>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+const sf = StyleSheet.create({
+  wrap: { marginTop: 4 },
+  card: {
+    backgroundColor: '#FFFFFF', borderRadius: 16,
+    borderWidth: 1, borderColor: BORDER, overflow: 'hidden',
+  },
+  row: {
+    flexDirection: 'row', alignItems: 'flex-start', gap: 12,
+    paddingHorizontal: 16, paddingVertical: 14,
+  },
+  rowBorder: { borderTopWidth: 1, borderTopColor: BORDER },
+  iconWrap: {
+    width: 36, height: 36, borderRadius: 10,
+    backgroundColor: 'rgba(13,31,60,0.06)',
+    alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1,
+  },
+  textWrap: { flex: 1 },
+  label: { fontSize: 14, fontWeight: '600', color: NAVY, marginBottom: 2, lineHeight: 19 },
+  sub:   { fontSize: 12, color: MUTED, lineHeight: 17 },
+});
+
 // ─── Step 5: principle rows ───────────────────────────────────────────────────
 const PRINCIPLES = [
   { icon: 'pencil-outline',            text: 'Share why the place matters' },
@@ -235,6 +295,13 @@ const STEPS = [
     interactive: 'principles',
   },
   {
+    key: 'safety',
+    icon: 'shield-checkmark-outline',
+    headline: 'help keep gem useful',
+    body: 'If you ever see spam, misinformation, or something that doesn\'t belong — you can report it. For now, reports go straight to the Gem creators.',
+    interactive: 'safety',
+  },
+  {
     key: 'done',
     icon: 'map-outline',
     headline: "you're ready",
@@ -303,6 +370,7 @@ export default function OnboardingScreen({ onComplete }) {
         {s.interactive === 'choice'      && <ChoiceGame />}
         {s.interactive === 'collections' && <CollectionCards />}
         {s.interactive === 'principles'  && <PrincipleRows />}
+        {s.interactive === 'safety'      && <SafetyCard />}
       </ScrollView>
 
       {/* ── Footer CTA ──────────────────────────────────────────── */}

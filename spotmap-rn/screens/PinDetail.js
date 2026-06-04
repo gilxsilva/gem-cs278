@@ -8,6 +8,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../supabase';
 import { getCat } from '../constants';
+import ReportModal from '../components/ReportModal';
 
 function resolveImageUrl(path) {
   if (!path) return null;
@@ -45,6 +46,7 @@ export default function PinDetail({ navigation, route, user }) {
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [reportVisible, setReportVisible] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [saveCount, setSaveCount] = useState(0);
   const [profilePhoto, setProfilePhoto] = useState(null);
@@ -174,19 +176,7 @@ export default function PinDetail({ navigation, route, user }) {
     );
   };
 
-  const reportPost = () => {
-    const submitReport = async (reason) => {
-      await supabase.from('reports').insert({ reporter_id: userId, gem_id: pinId, reason });
-      Alert.alert('Thanks for reporting', "We'll review this gem shortly.");
-    };
-    Alert.alert('Report gem', 'Why are you reporting this?', [
-      { text: 'Spam', onPress: () => submitReport('spam') },
-      { text: 'Inappropriate content', onPress: () => submitReport('inappropriate') },
-      { text: 'Misinformation', onPress: () => submitReport('misinformation') },
-      { text: 'Other', onPress: () => submitReport('other') },
-      { text: 'Cancel', style: 'cancel' },
-    ]);
-  };
+  const reportPost = () => setReportVisible(true);
 
   const deleteComment = (commentId) => {
     Alert.alert('Delete comment', 'Remove this thought?', [
@@ -447,6 +437,12 @@ export default function PinDetail({ navigation, route, user }) {
           <Ionicons name="arrow-up" size={18} color={commentText.trim() ? '#FAF7F2' : t.muted} />
         </TouchableOpacity>
       </View>
+      <ReportModal
+        visible={reportVisible}
+        gemId={pinId}
+        userId={userId}
+        onClose={() => setReportVisible(false)}
+      />
     </KeyboardAvoidingView>
   );
 }
