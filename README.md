@@ -1,75 +1,56 @@
-# spot — CS278 @ Stanford
+# gem — CS278 @ Stanford
 
-A social map app for sharing your favorite places with friends. Drop pins, browse by category, and see where your friends recommend.
-
-This repo has two folders:
-
-| Folder | What it is |
-|---|---|
-| `spotmap-rn/` | **React Native app (Expo)** — the main app, runs on iOS and Android via Expo Go. Submit this for class. |
-| `spotmap/` | React web app — used for early prototyping. Not the class submission. |
+A social map app for sharing your favorite places with friends. Drop pins, browse by category, and discover where your circles recommend.
 
 ---
 
-## Quick start (mobile app)
+## Quick start
 
 ```bash
-cd spotmap-rn
+cd gem
 npx expo start
 ```
 
 Scan the QR code with **Expo Go** on your phone (iOS or Android).
 
-> No Firebase yet? Tap **"Skip for now (demo only)"** on the login screen.
-
 ---
 
-## Folder structure — `spotmap-rn/`
+## Folder structure
 
 ```
-spotmap-rn/
+gem/
 ├── App.js              # Root: navigation stack, auth state, theme toggle
-├── firebase.js         # Firebase init (fill in your config here)
-├── constants.js        # Categories, theme colors, Stanford coords, preset locations
+├── supabase.js         # Supabase client
+├── constants.js        # Categories, theme colors, Stanford coords, map styles
 ├── app.json            # Expo config (name, bundle ID, EAS project ID)
 ├── screens/
-│   ├── Login.js        # Google sign-in + guest skip button
-│   ├── MapView.js      # Map with pins, category filter, slide-up preview sheet
-│   ├── AddPin.js       # Form to drop a new pin (name, category, note, photo, location)
-│   └── PinDetail.js    # Full detail view for a single pin
-└── assets/             # App icon, splash screen images
+│   ├── Login.js        # Google sign-in
+│   ├── OnboardingScreen.js  # First-time user onboarding
+│   ├── FeedView.js     # Social feed with circle/following filters
+│   ├── MapView.js      # Interactive map with pins and category filter
+│   ├── AddPin.js       # Compose a new gem (name, category, note, photo, location)
+│   ├── PinDetail.js    # Full detail view for a single gem
+│   ├── PostComments.js # Comments on a gem
+│   ├── Profile.js      # User profile, collections, taste tags
+│   ├── Search.js       # Search gems and users
+│   ├── Settings.js     # App settings, language, theme toggle
+│   ├── CollectionDetail.js  # View a saved collection
+│   └── CommunityGuide.js    # Community guidelines
+├── components/
+│   ├── SaveToCollectionModal.js
+│   └── ReportModal.js
+├── services/
+│   ├── places.js       # Location search via OpenStreetMap/Nominatim
+│   └── share.js        # Native share sheet
+├── localization/
+│   ├── i18n.js         # i18next setup (English + Spanish)
+│   └── translations/
+└── assets/             # App icon, splash screen, logo
 ```
-
----
-
-## Firebase setup (do this once)
-
-1. Go to [console.firebase.google.com](https://console.firebase.google.com) → create a project
-2. Enable these three services:
-   - **Authentication** → Sign-in method → Google
-   - **Firestore Database** → Create database → test mode
-   - **Storage** → Get started → test mode
-3. Project Settings → Your apps → add a **Web app** → copy the config
-4. Paste the config into `spotmap-rn/firebase.js`:
-
-```js
-const firebaseConfig = {
-  apiKey: "...",
-  authDomain: "...",
-  projectId: "...",
-  storageBucket: "...",
-  messagingSenderId: "...",
-  appId: "..."
-};
-```
-
-> Both `spotmap-rn/` and `spotmap/` use the same Firebase project. You only need to set this up once and paste the same config into both `firebase.js` files.
 
 ---
 
 ## Class submission (EAS / Expo Go)
-
-Follow the steps from the class guide:
 
 ```bash
 npm install -g eas-cli
@@ -79,29 +60,10 @@ eas update:configure
 eas update --auto
 ```
 
-Then share the link from the EAS dashboard. Teammates scan it with Expo Go.
-
----
-
-## Firestore security rules
-
-Paste these in Firebase Console → Firestore → Rules before sharing with test participants:
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /pins/{pin} {
-      allow read: if request.auth != null;
-      allow create: if request.auth != null;
-      allow update, delete: if request.auth.uid == resource.data.authorId;
-    }
-  }
-}
-```
+Share the link from the EAS dashboard. Teammates scan it with Expo Go.
 
 ---
 
 ## Theme
 
-The app defaults to **light mode**. Tap the 🌙 button in the top-right of the map to switch to dark mode.
+The app supports **light and dark mode**. Toggle via the Settings screen.
