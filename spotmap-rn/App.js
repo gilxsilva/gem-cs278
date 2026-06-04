@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Linking from 'expo-linking';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -96,6 +97,35 @@ export default function App() {
       setUser(session ? normalizeUser(session.user) : null);
     });
     return () => subscription.unsubscribe();
+  }, []);
+
+  // ── Deep-link listener (Android OAuth fix) ──────────────────────────────────
+  // On Android, Chrome Custom Tabs cannot detect custom-scheme redirects, so
+  // openAuthSessionAsync returns 'cancel' even when OAuth succeeds. The tokens
+  // arrive here via the Linking system instead, so we parse and set the session.
+  useEffect(() => {
+    const handleUrl = ({ url }) => {
+      if (!url) return;
+      const hash = url.split('#')[1] ?? '';
+      if (!hash) return;
+      const params = Object.fromEntries(
+        hash.split('&').filter(Boolean).map(p => p.split('=').map(decodeURIComponent))
+      );
+      if (params.access_token && params.refresh_token) {
+        supabase.auth.setSession({
+          access_token:  params.access_token,
+          refresh_token: params.refresh_token,
+        });
+      }
+    };
+
+    // App was already open when the deep link arrived
+    const sub = Linking.addEventListener('url', handleUrl);
+
+    // App was cold-launched by the deep link
+    Linking.getInitialURL().then(url => { if (url) handleUrl({ url }); });
+
+    return () => sub.remove();
   }, []);
 
   // ── Sync displayName from profiles table (overrides auth metadata) ──────────
