@@ -37,30 +37,22 @@ import { CATEGORIES } from '../constants';
 import { searchPlaces, geocodeAddress, fmtDisplayName } from '../services/places';
 
 // ─── Design tokens ────────────────────────────────────────────────────────────
-// Matches the Apple-inspired system established in Login.js
 const NAVY   = '#0D1F3C';
 const WHITE  = '#FFFFFF';
 const L1     = NAVY;
 const L2     = 'rgba(13,31,60,0.42)';
 const L3     = 'rgba(13,31,60,0.26)';
-const FILL   = '#F4F2EE';               // warm input fill
+const FILL   = '#F4F2EE';
 const BORDER = 'rgba(13,31,60,0.08)';
 const STANFORD = { latitude: 37.4275, longitude: -122.1697 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// PlacePicker — bottom-sheet modal
-//
-// Dual search on every keystroke (debounced):
-//   • Supabase places table  → community places already in gem
-//   • services/places.js     → Nominatim real-world geocoding (any place on Earth)
-//
-// Selecting any result gives a complete { name, address, city, latitude, longitude }.
-// Manual entry remains as a last resort; the typed address is auto-geocoded on confirm.
+// PlacePicker — bottom-sheet modal (UNCHANGED)
 // ─────────────────────────────────────────────────────────────────────────────
 function PlacePicker({ visible, onSelect, onClose }) {
   const [query,      setQuery]      = useState('');
-  const [dbResults,  setDbResults]  = useState([]);   // Supabase places
-  const [extResults, setExtResults] = useState([]);   // Nominatim places
+  const [dbResults,  setDbResults]  = useState([]);
+  const [extResults, setExtResults] = useState([]);
   const [dbBusy,     setDbBusy]     = useState(false);
   const [extBusy,    setExtBusy]    = useState(false);
   const [showManual, setShowManual] = useState(false);
@@ -70,7 +62,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
   const dbTimer  = useRef(null);
   const extTimer = useRef(null);
 
-  // Reset all state when the modal opens
   useEffect(() => {
     if (visible) {
       setQuery(''); setDbResults([]); setExtResults([]);
@@ -80,7 +71,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
     }
   }, [visible]);
 
-  // ── Supabase search (250 ms debounce) ────────────────────────────────────
   useEffect(() => {
     clearTimeout(dbTimer.current);
     const q = query.trim();
@@ -98,7 +88,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
     return () => clearTimeout(dbTimer.current);
   }, [query]);
 
-  // ── Nominatim real-world search (400 ms debounce — respects 1 req/s) ─────
   useEffect(() => {
     clearTimeout(extTimer.current);
     const q = query.trim();
@@ -107,8 +96,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
     extTimer.current = setTimeout(async () => {
       const places = await searchPlaces(q);
       setExtBusy(false);
-      // Filter out Nominatim results whose name already appears in DB results
-      // (simple dedup by lowercased name)
       const dbNames = new Set(dbResults.map(r => r.name.toLowerCase()));
       setExtResults(places.filter(p => !dbNames.has(p.name.toLowerCase())));
     }, 400);
@@ -126,7 +113,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
     setShowManual(true);
   };
 
-  // For manually-entered places: auto-geocode the address, then confirm.
   const confirmManual = async () => {
     const name = manualName.trim();
     const addr = manualAddr.trim();
@@ -146,7 +132,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
     }
   };
 
-  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <Modal
       visible={visible}
@@ -164,7 +149,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
         <View style={pp.sheet}>
           <View style={pp.handle} />
 
-          {/* Header */}
           <View style={pp.sheetHeader}>
             <Text style={pp.sheetTitle}>where is it?</Text>
             <TouchableOpacity
@@ -176,7 +160,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
             </TouchableOpacity>
           </View>
 
-          {/* Search bar */}
           <View style={pp.searchBar}>
             <Ionicons name="search-outline" size={15} color={L3} />
             <TextInput
@@ -197,7 +180,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            {/* ── Community places (already in gem) ──────────── */}
             {dbResults.length > 0 && (
               <>
                 <Text style={pp.sectionLabel}>IN GEM</Text>
@@ -225,7 +207,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
               </>
             )}
 
-            {/* ── Real-world places (Nominatim / Google) ─────── */}
             {extResults.length > 0 && (
               <>
                 <Text style={[pp.sectionLabel, dbResults.length > 0 && { marginTop: 16 }]}>
@@ -255,17 +236,14 @@ function PlacePicker({ visible, onSelect, onClose }) {
               </>
             )}
 
-            {/* ── Empty state ─────────────────────────────────── */}
             {showEmpty && (
               <Text style={pp.emptyMsg}>No results for "{query.trim()}"</Text>
             )}
 
-            {/* ── Separator before add-manual ─────────────────── */}
             {hasAnyResults && !showManual && (
               <View style={[pp.divider, { marginVertical: 8, marginLeft: 0 }]} />
             )}
 
-            {/* ── Add manually ────────────────────────────────── */}
             {!showManual ? (
               <TouchableOpacity style={pp.addRow} onPress={openManual} activeOpacity={0.72}>
                 <View style={[pp.resultIcon, pp.addIcon]}>
@@ -278,7 +256,6 @@ function PlacePicker({ visible, onSelect, onClose }) {
                 </Text>
               </TouchableOpacity>
             ) : (
-              /* ── Manual entry form ──────────────────────────── */
               <View style={pp.manualWrap}>
                 <Text style={pp.manualLabel}>PLACE NAME</Text>
                 <TextInput
@@ -369,8 +346,6 @@ const pp = StyleSheet.create({
     color: L1,
     letterSpacing: -0.4,
   },
-
-  // Search bar
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -387,8 +362,6 @@ const pp = StyleSheet.create({
     color: L1,
     paddingVertical: 0,
   },
-
-  // Section label
   sectionLabel: {
     fontSize: 10.5,
     fontWeight: '700',
@@ -398,8 +371,6 @@ const pp = StyleSheet.create({
     marginTop: 12,
     marginBottom: 4,
   },
-
-  // Results scroll
   resultScroll: { maxHeight: 420 },
   resultRow: {
     flexDirection: 'row',
@@ -415,13 +386,8 @@ const pp = StyleSheet.create({
     justifyContent: 'center',
     flexShrink: 0,
   },
-  resultIconGem: {
-    backgroundColor: 'rgba(13,31,60,0.06)',
-  },
-  gemGlyph: {
-    fontSize: 13,
-    color: NAVY,
-  },
+  resultIconGem: { backgroundColor: 'rgba(13,31,60,0.06)' },
+  gemGlyph: { fontSize: 13, color: NAVY },
   resultMeta: { flex: 1 },
   resultName: {
     fontSize: 14,
@@ -429,11 +395,7 @@ const pp = StyleSheet.create({
     color: L1,
     letterSpacing: -0.2,
   },
-  resultAddr: {
-    fontSize: 12,
-    color: L3,
-    marginTop: 2,
-  },
+  resultAddr: { fontSize: 12, color: L3, marginTop: 2 },
   divider: {
     height: StyleSheet.hairlineWidth,
     backgroundColor: BORDER,
@@ -445,21 +407,13 @@ const pp = StyleSheet.create({
     textAlign: 'center',
     paddingVertical: 18,
   },
-
-  // Done button
   doneBtn: {
     backgroundColor: NAVY,
     borderRadius: 10,
     paddingHorizontal: 16,
     paddingVertical: 7,
   },
-  doneBtnText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: WHITE,
-  },
-
-  // Add manually row
+  doneBtnText: { fontSize: 14, fontWeight: '600', color: WHITE },
   addRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -467,14 +421,7 @@ const pp = StyleSheet.create({
     paddingVertical: 12,
   },
   addIcon: { backgroundColor: 'rgba(13,31,60,0.06)' },
-  addText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: NAVY,
-    flex: 1,
-  },
-
-  // Manual entry form
+  addText: { fontSize: 14, fontWeight: '500', color: NAVY, flex: 1 },
   manualWrap: { paddingTop: 8 },
   manualLabel: {
     fontSize: 10.5,
@@ -492,12 +439,7 @@ const pp = StyleSheet.create({
     fontSize: 15,
     color: L1,
   },
-  manualHint: {
-    fontSize: 11.5,
-    color: L3,
-    marginTop: 6,
-    lineHeight: 16,
-  },
+  manualHint: { fontSize: 11.5, color: L3, marginTop: 6, lineHeight: 16 },
   manualActions: {
     flexDirection: 'row',
     gap: 10,
@@ -515,27 +457,56 @@ const pp = StyleSheet.create({
     minWidth: 100,
     alignItems: 'center',
   },
-  confirmText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: WHITE,
-  },
+  confirmText: { fontSize: 14, fontWeight: '600', color: WHITE },
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // AddPin — main compose screen
 // ─────────────────────────────────────────────────────────────────────────────
+
+// Inline hint text rendered below each section label
+function FieldHint({ text }) {
+  return <Text style={s.fieldHint}>{text}</Text>;
+}
+
 export default function AddPin({ navigation, user }) {
-  const [location, setLocation] = useState(null);
-  const [title,    setTitle]    = useState('');
-  const [category, setCategory] = useState('');
-  const [note,     setNote]     = useState('');
-  const [photo,    setPhoto]    = useState(null);
+  const [location,   setLocation]   = useState(null);
+  const [title,      setTitle]      = useState('');
+  const [category,   setCategory]   = useState('');
+  const [note,       setNote]       = useState('');
+  const [photo,      setPhoto]      = useState(null);
   const [showPicker, setShowPicker] = useState(false);
-  const [loading,  setLoading]  = useState(false);
+  const [loading,    setLoading]    = useState(false);
+  const [focused,    setFocused]    = useState(null); // 'title' | 'note'
 
   const canSubmit = !loading && !!title.trim() && !!category && !!location;
 
+  // Collect missing required fields for the footer hint
+  const missing = [];
+  if (!location)     missing.push('a place');
+  if (!title.trim()) missing.push('a name');
+  if (!category)     missing.push('a type');
+
+  // ── Info button handlers ─────────────────────────────────────────────────
+  const showTitleTips = () => Alert.alert(
+    'What makes a good name?',
+    'Be specific and memorable — name the moment, not just the place.\n\nGood examples:\n"Coupa back patio on a Tuesday"\n"The quiet corner by the windows"\n\nLess useful:\n"Nice café"',
+    [{ text: 'Got it' }]
+  );
+
+  const showNotesTips = () => Alert.alert(
+    'What to write here',
+    'Tell a friend why this place matters. Think: what would make someone actually go?\n\nGood example:\n"Quiet in the mornings, lots of outlets, and the back patio gets great sunlight."\n\nLess useful:\n"Great vibes."',
+    [{ text: 'Got it' }]
+  );
+
+  const showCategoryTips = () => Alert.alert(
+    'Picking the right type',
+    'Choose the category that fits how you use the place, not just what kind of place it is.\n\nA coffee shop you go to study is a Study Gem. A restaurant you return to for the atmosphere is a Food Spot.',
+    [{ text: 'Got it' }]
+  );
+
+  // ── Photo picker (UNCHANGED) ─────────────────────────────────────────────
   const pickPhoto = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== 'granted') {
@@ -549,7 +520,7 @@ export default function AddPin({ navigation, user }) {
     if (!result.canceled) setPhoto(result.assets[0]);
   };
 
-  // Submit logic is unchanged from the original — find or create place, then gem.
+  // ── Submit (UNCHANGED) ───────────────────────────────────────────────────
   const handleSubmit = async () => {
     if (!title.trim() || !category || !location) {
       Alert.alert('Almost there', 'Add a name, type, and location for your gem.');
@@ -566,7 +537,6 @@ export default function AddPin({ navigation, user }) {
     }
     setLoading(true);
     try {
-      // 1. Find or create the place
       let placeId;
       const { data: existing } = await supabase
         .from('places').select('id').eq('name', location.name).maybeSingle();
@@ -588,7 +558,6 @@ export default function AddPin({ navigation, user }) {
         placeId = newPlace.id;
       }
 
-      // 2. Create the gem
       const { data: gem, error: gemErr } = await supabase
         .from('gems')
         .insert({
@@ -602,7 +571,6 @@ export default function AddPin({ navigation, user }) {
         .select('id').single();
       if (gemErr) throw gemErr;
 
-      // 3. Upload photo if provided
       if (photo) {
         const arrayBuffer = await fetch(photo.uri).then(r => r.arrayBuffer());
         const storagePath = `gems/${user.uid}/${gem.id}/001.jpg`;
@@ -631,7 +599,7 @@ export default function AddPin({ navigation, user }) {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
 
-        {/* ── Header ──────────────────────────────────────────── */}
+        {/* ── Header ───────────────────────────────────────────────────── */}
         <View style={s.header}>
           <TouchableOpacity
             style={s.closeBtn}
@@ -644,7 +612,7 @@ export default function AddPin({ navigation, user }) {
           <View style={{ width: 36 }} />
         </View>
 
-        {/* ── Form ────────────────────────────────────────────── */}
+        {/* ── Form ─────────────────────────────────────────────────────── */}
         <ScrollView
           style={s.scroll}
           contentContainerStyle={s.scrollContent}
@@ -652,19 +620,29 @@ export default function AddPin({ navigation, user }) {
           keyboardShouldPersistTaps="handled"
         >
 
-          {/* WHERE IS IT? — first, because the place anchors the gem */}
+          {/* Invite line — sets the tone without adding friction */}
+          <Text style={s.inviteLine}>
+            Share a real place you'd recommend to a friend.
+          </Text>
+
+          {/* ── WHERE IS IT? ────────────────────────────────────────── */}
           <View style={s.field}>
-            <Text style={s.label}>WHERE IS IT?</Text>
+            <View style={s.labelRow}>
+              <Text style={s.label}>WHERE IS IT?</Text>
+            </View>
+            <FieldHint text="Search by name, address, or neighborhood." />
             <TouchableOpacity
               style={[s.locationRow, location && s.locationRowSelected]}
               onPress={() => setShowPicker(true)}
               activeOpacity={0.75}
             >
-              <Ionicons
-                name={location ? 'location' : 'location-outline'}
-                size={17}
-                color={location ? NAVY : L3}
-              />
+              <View style={[s.locationIconWrap, location && s.locationIconWrapFilled]}>
+                <Ionicons
+                  name={location ? 'location' : 'location-outline'}
+                  size={16}
+                  color={location ? NAVY : L3}
+                />
+              </View>
               <View style={{ flex: 1 }}>
                 <Text style={[s.locationName, !location && { color: L3 }]}>
                   {location ? location.name : 'search for a place…'}
@@ -677,22 +655,42 @@ export default function AddPin({ navigation, user }) {
             </TouchableOpacity>
           </View>
 
-          {/* NAME YOUR GEM */}
+          {/* ── NAME YOUR GEM ───────────────────────────────────────── */}
           <View style={s.field}>
-            <Text style={s.label}>NAME YOUR GEM</Text>
+            <View style={s.labelRow}>
+              <Text style={s.label}>NAME YOUR GEM</Text>
+              <TouchableOpacity
+                onPress={showTitleTips}
+                hitSlop={{ top: 8, bottom: 8, left: 10, right: 8 }}
+              >
+                <Ionicons name="information-circle-outline" size={17} color={L3} />
+              </TouchableOpacity>
+            </View>
+            <FieldHint text="Make it specific and memorable." />
             <TextInput
-              style={s.input}
+              style={[s.input, focused === 'title' && s.inputFocused]}
               placeholder="e.g. Coupa back patio on a Tuesday"
               placeholderTextColor={L3}
               value={title}
               onChangeText={setTitle}
+              onFocus={() => setFocused('title')}
+              onBlur={() => setFocused(null)}
               returnKeyType="next"
             />
           </View>
 
-          {/* TYPE OF GEM */}
+          {/* ── TYPE OF GEM ─────────────────────────────────────────── */}
           <View style={s.field}>
-            <Text style={s.label}>TYPE OF GEM</Text>
+            <View style={s.labelRow}>
+              <Text style={s.label}>TYPE OF GEM</Text>
+              <TouchableOpacity
+                onPress={showCategoryTips}
+                hitSlop={{ top: 8, bottom: 8, left: 10, right: 8 }}
+              >
+                <Ionicons name="information-circle-outline" size={17} color={L3} />
+              </TouchableOpacity>
+            </View>
+            <FieldHint text="Pick the one that best fits how you use this place." />
             <View style={s.catGrid}>
               {CATEGORIES.map(c => {
                 const active = category === c.id;
@@ -701,45 +699,63 @@ export default function AddPin({ navigation, user }) {
                     key={c.id}
                     style={[
                       s.catChip,
-                      active && {
-                        backgroundColor: c.color + '16',
-                        borderColor:     c.color + '50',
-                      },
+                      active
+                        ? { backgroundColor: c.color + '16', borderColor: c.color + '55' }
+                        : { backgroundColor: FILL, borderColor: BORDER },
                     ]}
                     onPress={() => setCategory(active ? '' : c.id)}
                     activeOpacity={0.72}
                   >
-                    <Ionicons
-                      name={c.icon}
-                      size={17}
-                      color={active ? c.color : L3}
-                    />
-                    <Text style={[s.catLabel, active && { color: c.color }]}>
+                    <View style={[
+                      s.catIconWrap,
+                      active ? { backgroundColor: c.color + '22' } : { backgroundColor: 'rgba(13,31,60,0.06)' },
+                    ]}>
+                      <Ionicons name={c.icon} size={15} color={active ? c.color : L3} />
+                    </View>
+                    <Text style={[s.catLabel, active && { color: c.color, fontWeight: '600' }]}>
                       {c.label}
                     </Text>
+                    {active && (
+                      <Ionicons name="checkmark-circle" size={16} color={c.color} />
+                    )}
                   </TouchableOpacity>
                 );
               })}
             </View>
           </View>
 
-          {/* WHAT MADE IT SPECIAL */}
+          {/* ── WHAT MADE IT SPECIAL? ───────────────────────────────── */}
           <View style={s.field}>
-            <Text style={s.label}>WHAT MADE IT SPECIAL?</Text>
+            <View style={s.labelRow}>
+              <Text style={s.label}>WHAT MADE IT SPECIAL?</Text>
+              <TouchableOpacity
+                onPress={showNotesTips}
+                hitSlop={{ top: 8, bottom: 8, left: 10, right: 8 }}
+              >
+                <Ionicons name="information-circle-outline" size={17} color={L3} />
+              </TouchableOpacity>
+            </View>
+            <FieldHint text="What would you tell a friend about this place?" />
             <TextInput
-              style={[s.input, s.textarea]}
-              placeholder="what would you tell a friend?"
+              style={[s.input, s.textarea, focused === 'note' && s.inputFocused]}
+              placeholder={'Quiet in the mornings, lots of outlets, and the\nback patio gets great sunlight.'}
               placeholderTextColor={L3}
               value={note}
               onChangeText={setNote}
+              onFocus={() => setFocused('note')}
+              onBlur={() => setFocused(null)}
               multiline
               textAlignVertical="top"
             />
           </View>
 
-          {/* ADD A PHOTO */}
+          {/* ── ADD A PHOTO ─────────────────────────────────────────── */}
           <View style={s.field}>
-            <Text style={s.label}>ADD A PHOTO</Text>
+            <View style={s.labelRow}>
+              <Text style={s.label}>ADD A PHOTO</Text>
+              <Text style={s.optionalBadge}>optional</Text>
+            </View>
+            <FieldHint text="A real photo helps others trust and recognize the place." />
             {photo ? (
               <View style={s.photoPreview}>
                 <Image source={{ uri: photo.uri }} style={s.photoImg} />
@@ -757,17 +773,24 @@ export default function AddPin({ navigation, user }) {
                 onPress={pickPhoto}
                 activeOpacity={0.75}
               >
-                <Ionicons name="camera-outline" size={22} color={L3} />
-                <Text style={s.photoUploadText}>tap to add a photo</Text>
-                <Text style={s.photoOptional}>optional</Text>
+                <View style={s.photoIconWrap}>
+                  <Ionicons name="camera-outline" size={22} color={L2} />
+                </View>
+                <Text style={s.photoUploadText}>Add a photo</Text>
+                <Text style={s.photoHint}>tap to choose from your library</Text>
               </TouchableOpacity>
             )}
           </View>
 
         </ScrollView>
 
-        {/* ── Submit footer (always visible, KAV-protected) ────── */}
+        {/* ── Footer CTA ───────────────────────────────────────────────── */}
         <View style={s.footer}>
+          {!canSubmit && missing.length > 0 && (
+            <Text style={s.footerHint}>
+              Still needed: {missing.join(', ')}
+            </Text>
+          )}
           <TouchableOpacity
             style={[s.submitBtn, !canSubmit && s.submitBtnOff]}
             onPress={handleSubmit}
@@ -783,7 +806,7 @@ export default function AddPin({ navigation, user }) {
 
       </KeyboardAvoidingView>
 
-      {/* Place picker modal — lives outside KAV; modals render above all */}
+      {/* Place picker modal — lives outside KAV */}
       <PlacePicker
         visible={showPicker}
         onSelect={place => { setLocation(place); setShowPicker(false); }}
@@ -800,7 +823,7 @@ const s = StyleSheet.create({
     backgroundColor: WHITE,
   },
 
-  // Header
+  // ── Header ────────────────────────────────────────────────────────────────
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -825,26 +848,57 @@ const s = StyleSheet.create({
     letterSpacing: -0.3,
   },
 
-  // Scroll form
+  // ── Scroll ────────────────────────────────────────────────────────────────
   scroll: { flex: 1 },
   scrollContent: {
     paddingHorizontal: 24,
-    paddingTop: 28,
+    paddingTop: 22,
     paddingBottom: 16,
-    gap: 28,
+    gap: 26,
   },
 
-  // Field + label
-  field: { gap: 10 },
+  // ── Invite line ───────────────────────────────────────────────────────────
+  inviteLine: {
+    fontSize: 14,
+    color: L2,
+    textAlign: 'center',
+    lineHeight: 20,
+    marginBottom: 2,
+  },
+
+  // ── Field group ───────────────────────────────────────────────────────────
+  field: { gap: 8 },
+
+  // ── Label row (label + optional info button) ──────────────────────────────
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
   label: {
     fontSize: 10.5,
     fontWeight: '700',
-    color: L3,
+    color: L2,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
   },
+  optionalBadge: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: L3,
+    letterSpacing: 0.2,
+  },
 
-  // Text inputs
+  // ── Field hint (quiet helper below the label) ─────────────────────────────
+  fieldHint: {
+    fontSize: 12,
+    color: L3,
+    lineHeight: 17,
+    marginTop: -2,
+  },
+
+  // ── Text inputs ───────────────────────────────────────────────────────────
+  // borderWidth set to 1.5/transparent so focused state doesn't cause layout shift
   input: {
     backgroundColor: FILL,
     borderRadius: 14,
@@ -853,32 +907,44 @@ const s = StyleSheet.create({
     fontSize: 15,
     fontWeight: '400',
     color: L1,
+    borderWidth: 1.5,
+    borderColor: 'transparent',
+  },
+  inputFocused: {
+    backgroundColor: WHITE,
+    borderColor: 'rgba(13,31,60,0.18)',
   },
   textarea: {
-    minHeight: 96,
+    minHeight: 100,
     paddingTop: 14,
   },
 
-  // Location row — two states: empty and selected
+  // ── Location row ──────────────────────────────────────────────────────────
   locationRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     backgroundColor: FILL,
     borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderWidth: StyleSheet.hairlineWidth,
+    paddingHorizontal: 12,
+    paddingVertical: 13,
+    borderWidth: 1.5,
     borderColor: 'transparent',
   },
   locationRowSelected: {
     backgroundColor: WHITE,
-    borderColor: BORDER,
-    shadowColor: '#000',
-    shadowOpacity: 0.04,
-    shadowRadius: 8,
-    shadowOffset: { width: 0, height: 2 },
-    elevation: 1,
+    borderColor: 'rgba(13,31,60,0.18)',
+  },
+  locationIconWrap: {
+    width: 32, height: 32,
+    borderRadius: 9,
+    backgroundColor: 'rgba(13,31,60,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+  },
+  locationIconWrapFilled: {
+    backgroundColor: 'rgba(13,31,60,0.10)',
   },
   locationName: {
     fontSize: 15,
@@ -892,7 +958,7 @@ const s = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Category chips — 2-column, icon left + label
+  // ── Category grid ─────────────────────────────────────────────────────────
   catGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -903,12 +969,17 @@ const s = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 9,
-    backgroundColor: FILL,
     borderRadius: 14,
-    paddingHorizontal: 14,
+    paddingHorizontal: 12,
     paddingVertical: 13,
     borderWidth: 1.5,
-    borderColor: 'transparent',
+  },
+  catIconWrap: {
+    width: 28, height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
   },
   catLabel: {
     fontSize: 13,
@@ -917,22 +988,31 @@ const s = StyleSheet.create({
     flex: 1,
   },
 
-  // Photo upload
+  // ── Photo upload ──────────────────────────────────────────────────────────
   photoUpload: {
     backgroundColor: FILL,
     borderRadius: 14,
-    paddingVertical: 28,
+    borderWidth: 1.5,
+    borderColor: BORDER,
+    paddingVertical: 30,
     alignItems: 'center',
     gap: 6,
   },
+  photoIconWrap: {
+    width: 48, height: 48,
+    borderRadius: 14,
+    backgroundColor: 'rgba(13,31,60,0.06)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 2,
+  },
   photoUploadText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '600',
     color: L2,
   },
-  photoOptional: {
-    fontSize: 11.5,
-    fontWeight: '400',
+  photoHint: {
+    fontSize: 12,
     color: L3,
   },
   photoPreview: {
@@ -952,7 +1032,7 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
 
-  // Footer CTA
+  // ── Footer CTA ────────────────────────────────────────────────────────────
   footer: {
     paddingHorizontal: 24,
     paddingTop: 12,
@@ -960,10 +1040,16 @@ const s = StyleSheet.create({
     backgroundColor: WHITE,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: BORDER,
+    gap: 8,
+  },
+  footerHint: {
+    fontSize: 12,
+    color: L3,
+    textAlign: 'center',
   },
   submitBtn: {
     backgroundColor: NAVY,
-    borderRadius: 14,
+    borderRadius: 100,
     paddingVertical: 17,
     alignItems: 'center',
     justifyContent: 'center',
