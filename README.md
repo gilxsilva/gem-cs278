@@ -1,8 +1,8 @@
-# Gem
+# GEM
 
 **Places worth remembering.**
 
-Gem is a social mobile application for discovering and sharing meaningful places through people you trust. Rather than surfacing recommendations from anonymous reviewers or engagement-optimized algorithms, Gem builds a personal map from the opinions of friends, classmates, and others whose taste you have chosen to follow.
+GEM is a social mobile application for discovering and sharing meaningful places through people you trust. Rather than surfacing recommendations from anonymous reviewers or engagement-optimized algorithms, GEM builds a personal map from the opinions of friends, classmates, and others whose taste you have chosen to follow.
 
 Built for CS278: Social Computing, Stanford University, Spring 2026.
 
@@ -39,7 +39,7 @@ Share the resulting EAS update URL. Testers open it directly in Expo Go.
 
 Mainstream place-discovery platforms optimize for volume and engagement. The result is thousands of anonymous reviews that are difficult to contextualize and easy to game. In practice, people rely on a much smaller and more trusted signal: a recommendation from a friend, a roommate, a professor, or someone whose judgment they have tested over time.
 
-Gem is built around that observation. Every pin in Gem is a personal recommendation attached to a real person whose profile, taste tags, and history are visible. The social graph is not decorative. It determines what appears in your feed and shapes every discovery experience in the app.
+GEM is built around that observation. Every pin in GEM is a personal recommendation attached to a real person whose profile, taste tags, and history are visible. The social graph is not decorative. It determines what appears in your feed and shapes every discovery experience in the app.
 
 ---
 
@@ -55,7 +55,7 @@ Circle mode collapses the feed to gems authored exclusively by accounts you foll
 
 An interactive Google Maps view renders every gem as a color-coded, icon-labeled pin organized by category. Tapping a pin surfaces a slide-up preview sheet; a second tap navigates to the full gem detail. The map supports the same Circle mode filter as the feed and defaults to Stanford's campus. Custom map styles are applied for both light and dark themes.
 
-### Creating a Gem
+### Creating a GEM
 
 The compose screen prompts for a place name, category, optional photo, and a personal note. The location picker queries the app's Supabase database first, then falls back to the OpenStreetMap Nominatim API for unrecognized locations, with a manual entry option as a final fallback. The onboarding flow explicitly models what a high-quality, specific gem looks like before a user posts for the first time.
 
@@ -129,19 +129,19 @@ The backend is a Supabase project providing PostgreSQL, authentication, file sto
 
 The core schema includes the following tables:
 
-| Table | Purpose |
-|---|---|
-| `profiles` | Extended user data: handle, bio, taste tagline, taste tags, avatar |
-| `gems` | User-created place recommendations |
-| `places` | Geocoded location data (name, city, latitude, longitude) |
-| `gem_images` | Ordered photo attachments stored in Supabase Storage |
-| `comments` | Comments with optional `parent_comment_id` for one-level threading |
-| `comment_likes` | Per-user comment likes with composite primary key |
-| `saves` | Many-to-many relationship between users and gems |
-| `collections` | Named, visibility-controlled sets of saved gems |
-| `collection_gems` | Junction table linking collections to gems |
-| `follows` | Directed follow graph between users |
-| `reports` | Structured reports on gems and comments |
+| Table             | Purpose                                                            |
+| ----------------- | ------------------------------------------------------------------ |
+| `profiles`        | Extended user data: handle, bio, taste tagline, taste tags, avatar |
+| `gems`            | User-created place recommendations                                 |
+| `places`          | Geocoded location data (name, city, latitude, longitude)           |
+| `gem_images`      | Ordered photo attachments stored in Supabase Storage               |
+| `comments`        | Comments with optional `parent_comment_id` for one-level threading |
+| `comment_likes`   | Per-user comment likes with composite primary key                  |
+| `saves`           | Many-to-many relationship between users and gems                   |
+| `collections`     | Named, visibility-controlled sets of saved gems                    |
+| `collection_gems` | Junction table linking collections to gems                         |
+| `follows`         | Directed follow graph between users                                |
+| `reports`         | Structured reports on gems and comments                            |
 
 Row Level Security is enabled on all tables. Policies enforce ownership on all write operations: for example, gems can only be deleted where `auth.uid() = author_id`, and follows can only be created or deleted where `auth.uid() = follower_id`.
 
@@ -167,7 +167,7 @@ Collection item counts are maintained as a denormalized `item_count` column on t
 
 ## Social Computing Concepts
 
-Gem draws on three core theories from CS278: Social Computing. These concepts shaped both how the system was designed and what behaviors we expected to see.
+GEM draws on three core theories from CS278: Social Computing. These concepts shaped both how the system was designed and what behaviors we expected to see.
 
 ### Social Proof and the Cold Start Problem
 
@@ -177,13 +177,13 @@ To address this, we prepopulated the platform with posts from the development te
 
 ### Weak Ties and Strong Ties
 
-Gem is designed to operate at the boundary between weak and strong ties. The platform surfaces recommendations from a broad social network rather than requiring close friendships as a prerequisite for meaningful discovery. A user does not need a deeply formed relationship with someone to benefit from their gem posts.
+GEM is designed to operate at the boundary between weak and strong ties. The platform surfaces recommendations from a broad social network rather than requiring close friendships as a prerequisite for meaningful discovery. A user does not need a deeply formed relationship with someone to benefit from their gem posts.
 
-The intended use pattern is to leverage weak ties for place discovery and use that discovery as a bridge toward stronger social interaction. Finding a place through a loose connection can prompt a conversation, lead to making plans with a closer friend, or open a new interaction with the person who posted. Gem does not aim to replace strong-tie relationships but to use the wider network as a source of inspiration that flows into those closer connections. The follow graph and taste tags support this by giving users enough signal to determine whether a connection is worth engaging with, even without a prior relationship.
+The intended use pattern is to leverage weak ties for place discovery and use that discovery as a bridge toward stronger social interaction. Finding a place through a loose connection can prompt a conversation, lead to making plans with a closer friend, or open a new interaction with the person who posted. GEM does not aim to replace strong-tie relationships but to use the wider network as a source of inspiration that flows into those closer connections. The follow graph and taste tags support this by giving users enough signal to determine whether a connection is worth engaging with, even without a prior relationship.
 
 ### Injunctive Norms and User-Based Moderation
 
-To maintain a useful and respectful community, Gem introduces norms early and makes them persistent. Rather than relying on descriptive norms (what most people do) alone, we focused on injunctive norms (what the community considers appropriate behavior) established at the point of first use.
+To maintain a useful and respectful community, GEM introduces norms early and makes them persistent. Rather than relying on descriptive norms (what most people do) alone, we focused on injunctive norms (what the community considers appropriate behavior) established at the point of first use.
 
 The seven-step onboarding flow explicitly models what a good gem looks like. It includes examples of low-quality posts alongside higher-quality ones and uses an interactive choice exercise to make the distinction concrete before a user posts for the first time. The community guidelines remain accessible from the Settings screen, so the reference point is never buried. For enforcement, the platform uses user-based moderation: any gem or comment can be reported through a structured flow with five categories. Reports are reviewed directly by the development team. This combination of early norm-setting, accessible guidelines, and crowdsourced reporting was our approach to building a culture of contribution quality without requiring automated moderation infrastructure.
 
@@ -268,7 +268,7 @@ Several directions emerged during the project that were not implemented within t
 
 **Collaborative collections.** Collections could be opened to multiple contributors, enabling shared curation for trips, neighborhoods, or recurring group contexts such as weekly study sessions.
 
-**Place memories.** After visiting a gem, a user could attach a follow-up note recording whether the experience matched the recommendation. This would transform Gem from a recommendation layer into a personal place journal.
+**Place memories.** After visiting a gem, a user could attach a follow-up note recording whether the experience matched the recommendation. This would transform GEM from a recommendation layer into a personal place journal.
 
 **Travel mode.** A temporary radius expansion when a user is in an unfamiliar location would surface gems from their network in that area, extending the trust graph to places they do not frequently visit.
 
@@ -278,22 +278,22 @@ Several directions emerged during the project that were not implemented within t
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Framework | React Native, Expo SDK 54 |
-| Navigation | React Navigation (Native Stack, Bottom Tabs) |
-| Backend | Supabase (PostgreSQL, Row-Level Security) |
-| Authentication | Supabase Auth, Google OAuth (implicit flow) |
-| Database queries | Supabase JS client, custom `get_feed` RPC |
-| Storage | Supabase Storage |
-| Maps | Google Maps via `react-native-maps` |
-| Place search | OpenStreetMap / Nominatim |
-| Icons | Ionicons via `@expo/vector-icons` |
-| Localization | i18next, react-i18next |
-| Session persistence | AsyncStorage |
-| Image selection | expo-image-picker |
-| OAuth browser | expo-web-browser, expo-linking |
-| Build and distribution | EAS (Expo Application Services) |
+| Layer                  | Technology                                   |
+| ---------------------- | -------------------------------------------- |
+| Framework              | React Native, Expo SDK 54                    |
+| Navigation             | React Navigation (Native Stack, Bottom Tabs) |
+| Backend                | Supabase (PostgreSQL, Row-Level Security)    |
+| Authentication         | Supabase Auth, Google OAuth (implicit flow)  |
+| Database queries       | Supabase JS client, custom `get_feed` RPC    |
+| Storage                | Supabase Storage                             |
+| Maps                   | Google Maps via `react-native-maps`          |
+| Place search           | OpenStreetMap / Nominatim                    |
+| Icons                  | Ionicons via `@expo/vector-icons`            |
+| Localization           | i18next, react-i18next                       |
+| Session persistence    | AsyncStorage                                 |
+| Image selection        | expo-image-picker                            |
+| OAuth browser          | expo-web-browser, expo-linking               |
+| Build and distribution | EAS (Expo Application Services)              |
 
 ---
 
@@ -301,7 +301,7 @@ Several directions emerged during the project that were not implemented within t
 
 This project was developed for CS278: Social Computing at Stanford University. We are grateful to the CS278 course staff for their guidance throughout the quarter.
 
-The following open-source projects and platforms made Gem possible:
+The following open-source projects and platforms made GEM possible:
 
 - [Supabase](https://supabase.com) for the backend infrastructure
 - [Expo](https://expo.dev) for the mobile development framework and distribution tooling
@@ -309,4 +309,4 @@ The following open-source projects and platforms made Gem possible:
 
 ---
 
-*CS278: Social Computing, Stanford University, Spring 2026 — [cs278.stanford.edu](https://cs278.stanford.edu)*
+_CS278: Social Computing, Stanford University, Spring 2026 - [cs278.stanford.edu](https://cs278.stanford.edu)_
