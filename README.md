@@ -1,262 +1,29 @@
-<div align="center">
+# Gem
 
-# ✦ gem
+**Places worth remembering.**
 
-### places worth remembering
+Gem is a social mobile application for discovering and sharing meaningful places through people you trust. Rather than surfacing recommendations from anonymous reviewers or engagement-optimized algorithms, Gem builds a personal map from the opinions of friends, classmates, and others whose taste you have chosen to follow.
 
-A social map for recommendations that actually mean something —  
-from people whose taste you trust.
-
----
-
-*Built for CS278 · Social Computing · Stanford University*
-
-</div>
+Built for CS278: Social Computing, Stanford University, Spring 2026.
 
 ---
 
-## Why we built this
+## Quick Start
 
-Every time you open Google Maps, Yelp, or TripAdvisor, you get the same thing: thousands of strangers rating the same places in the same way. The algorithm surfaces what's popular. Not what's good. Not what's right for *you*.
-
-But here's what actually happens when you need a recommendation: you text a friend. You ask your roommate. You remember that one thing your dad mentioned when he drove through town. You trust people, not star ratings.
-
-Gem is built around that instinct.
-
-It's a map where every pin is a personal recommendation — from someone whose taste you know, whose judgment you've tested, whose opinions come with context. Not "4.2 stars (1,847 reviews)." Just: *"Get the cortado and sit outside if it's sunny. Feels like a tiny reset."*
-
-That's a gem.
-
----
-
-## What it does
-
-Gem lets you drop pins on places that matter to you, follow people whose taste you trust, and browse a feed of recommendations that comes from your actual circle — not an opaque algorithm.
-
-The result is a living, personal map that gets more useful as the people around you use it.
-
----
-
-## Features
-
-### ✦ The Feed
-
-Two modes, one screen.
-
-**Discover** surfaces all public gems with a trending strip at the top — the most-saved places across the network, right now. Posts from people you follow get a subtle `circle` badge so you always know whose voice you're hearing.
-
-**Circle** collapses the feed to just your people. No noise. Only gems from accounts you've explicitly chosen to follow.
-
-Both modes support category filters: Study Gems, Food Spots, Coffee Runs, Moments, Hidden Gems, Late Night.
-
----
-
-### 🗺 The Map
-
-An interactive Google Maps view with custom-styled light and dark themes. Every gem gets a color-coded, icon-labeled pin. Tap a pin to see a slide-up preview; tap through to the full detail.
-
-Filter by category or switch to **Circle mode** to see only your network's pins. The map defaults to Stanford's campus and expands from there.
-
----
-
-### ✦ Drop a Gem
-
-The compose screen asks three things: what's the place, what category does it live in, and why does it matter. Add a photo and a note. The location picker searches the Supabase database first, then falls back to OpenStreetMap for anything not in the index — with a manual entry option if you're somewhere truly off the grid.
-
-Good gems are specific. The onboarding teaches this from the start.
-
----
-
-### 📚 Collections
-
-Organize saves into named collections — *Study Spots*, *Date Nights*, *Places to Show My Parents*. Each collection can be public (visible on your profile) or private (just for you). Collections turn a scattered list of saves into something navigable.
-
----
-
-### 👤 Profiles
-
-Every user gets a profile with display name, `@handle`, bio, and two taste-specific fields: a **taste tagline** (a single sentence about what you look for in a place) and **taste tags** (up to 8 free-form tags that describe your sensibility). These signals help people decide whether to follow you.
-
-Profiles show follower and following counts, your gem count, your public collections, and a preview of your latest gem.
-
----
-
-### 👥 The Follow Graph
-
-Follow people whose recommendations you trust. Unfollow when that changes. Your following list directly controls what you see in Circle mode — making the follow decision meaningful rather than social obligation.
-
----
-
-### 🔖 Save & Bookmark
-
-Heart a gem to save it. Bookmark it to a specific collection. The save count on each gem is public, providing lightweight social proof without turning the app into a popularity contest.
-
----
-
-### 🚩 Reporting
-
-Tap the `···` menu on any gem to report it. Five reasons: Spam, Inappropriate content, Misinformation, Not a real place, or Other. Reports go directly to the Gem team for review. The onboarding covers this — because community health is part of the product, not an afterthought.
-
----
-
-### 🌐 Language Support
-
-English and Spanish, switchable in Settings. Language preference persists across sessions.
-
----
-
-### 🌙 Light & Dark Mode
-
-Full theme support throughout. Warm cream and deep navy in light mode. A dark-roasted warm dark mode that doesn't look like every other dark UI.
-
----
-
-## Screenshots
-
-> *Screenshots coming soon — add images to this section before final submission.*
-
-<!-- SCREENSHOT GUIDE:
-  Recommended shots (in order):
-  1. Login screen — the logo + "places worth remembering" tagline
-  2. Onboarding step 1 — the ✦ welcome screen
-  3. Onboarding step 3 — the interactive "which gem is better?" choice game
-  4. Feed (Discover mode) — showing the trending strip + a few cards with circle badges
-  5. Feed (Circle mode) — the filtered view with the empty state if needed
-  6. Map — pins in category colors, one selected with preview sheet
-  7. AddPin — the compose screen with location picker open
-  8. Profile — showing taste tags, tagline, and collections grid
-  9. PinDetail — full detail view
-  10. Settings — language picker or theme toggle
-  
-  Tip: Use two phones or the iOS simulator with different accounts to show
-  the social features (circle feed, follow state, etc.) in context.
--->
-
-| Login | Feed | Map | Profile |
-|---|---|---|---|
-| *(add screenshot)* | *(add screenshot)* | *(add screenshot)* | *(add screenshot)* |
-
----
-
-## Social Computing Concepts
-
-*This section addresses the CS278 framing directly.*
-
-Gem is designed around several core ideas from social computing research:
-
-**Trust networks over broadcast networks.** The follow graph in Gem is not decorative. Circle mode makes your social graph the actual content filter. Who you follow determines what you see — making the follow relationship load-bearing in a way that most social apps don't require.
-
-**Social proof at the right scale.** Save counts are visible, but kept secondary. A gem with 12 saves from people in your network means more than one with 200 saves from strangers. The trending section is a lightweight ambient awareness signal — not a ranked algorithmic feed.
-
-**User-generated norms.** The onboarding runs a 7-step interactive tutorial that explicitly teaches users what a "good gem" looks like, using live examples and an interactive choice game. We're not just onboarding users to a product — we're onboarding them to a community standard.
-
-**Taste as a trust signal.** Profiles include taste taglines and taste tags — fields that have no equivalent in standard social apps. They let you evaluate *whether* to follow someone before following them. This shifts the follow decision from social pressure ("they followed me") to genuine taste alignment.
-
-**Place-based social interaction.** Gems are anchored to real geographic locations. This makes the social graph spatially legible — your circle's recommendations form a literal map of trusted places. The social and physical layers reinforce each other.
-
-**Moderation as community responsibility.** The report flow is covered in onboarding, not buried in settings. Reports go to the Gem team directly. The framing — "help keep gem useful" — positions moderation as participation, not policing.
-
-**Parasocial trust.** You don't have to know someone personally to follow them. Someone with a taste tagline that resonates, or a collection that maps to yours, is worth following even if you've never met. Gem supports both close-circle discovery and interest-aligned discovery.
-
----
-
-## Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Framework** | React Native (Expo ~54) |
-| **Navigation** | React Navigation — Native Stack + Bottom Tabs |
-| **Backend** | Supabase (PostgreSQL + Row-Level Security) |
-| **Auth** | Supabase Auth — Google OAuth (implicit flow) |
-| **Database queries** | Supabase JS client + custom `get_feed` RPC |
-| **Storage** | Supabase Storage (`gem-images` bucket) |
-| **Maps** | Google Maps via `react-native-maps` |
-| **Place search** | OpenStreetMap / Nominatim (free, no API key) |
-| **Icons** | Ionicons via `@expo/vector-icons` |
-| **Localization** | i18next + react-i18next (EN / ES) |
-| **Session storage** | AsyncStorage |
-| **Image picker** | expo-image-picker |
-| **OAuth browser** | expo-web-browser + expo-linking |
-| **Build & deploy** | EAS (Expo Application Services) |
-
----
-
-## Project Structure
-
-```
-gem/
-├── App.js                  # Root: auth listener, onboarding gate, navigation shell
-├── supabase.js             # Supabase client (auth + DB + storage)
-├── constants.js            # Categories, theme tokens, map styles, Stanford coords
-│
-├── screens/
-│   ├── Login.js            # Google sign-in, guest demo mode
-│   ├── OnboardingScreen.js # 7-step interactive onboarding (shown once per user)
-│   ├── FeedView.js         # Discover + Circle feed with trending strip
-│   ├── MapView.js          # Interactive map with category pins
-│   ├── AddPin.js           # Compose screen — drop a new gem
-│   ├── PinDetail.js        # Full gem detail view
-│   ├── PostComments.js     # Comments thread
-│   ├── Profile.js          # User profile, collections, taste fields, follow graph
-│   ├── Search.js           # Search gems and users
-│   ├── CollectionDetail.js # View all gems in a collection
-│   ├── Settings.js         # Language, theme, sign out
-│   └── CommunityGuide.js   # Community guidelines
-│
-├── components/
-│   ├── SaveToCollectionModal.js  # Bottom sheet: save a gem to a collection
-│   └── ReportModal.js            # Bottom sheet: report a gem (5 categories)
-│
-├── services/
-│   ├── places.js           # Place search via Nominatim + Supabase, geocoding
-│   └── share.js            # Native share sheet for gems
-│
-├── localization/
-│   ├── i18n.js             # i18next setup, AsyncStorage language persistence
-│   └── translations/
-│       ├── en.json
-│       └── es.json
-│
-└── assets/
-    ├── logo.png            # App wordmark (used throughout the app)
-    ├── icon.png            # App icon
-    ├── adaptive-icon.png   # Android adaptive icon
-    └── splash-icon.png     # Splash screen
-```
-
----
-
-## Running Locally
-
-### Prerequisites
-
-- Node.js 20+
-- [Expo Go](https://expo.dev/go) installed on your phone
-- A Supabase project (or use the existing one if you have the credentials)
-
-### Setup
+**Requirements:** Node.js 20+, the [Expo Go](https://expo.dev/go) app on your iOS or Android device.
 
 ```bash
-# Clone the repo
 git clone <repo-url>
 cd gem
-
-# Install dependencies
 npm install
-
-# Start the dev server
 npx expo start
 ```
 
-Scan the QR code with Expo Go. The app will load on your device.
+Scan the QR code with Expo Go. The app connects to the live Supabase project by default and requires no additional configuration.
 
-### Environment
+**Environment variables:** Supabase credentials are stored in `gem/.env`. Copy `gem/.env.example` and fill in your own values if you want to point the app at a different Supabase project.
 
-Supabase credentials are configured directly in `supabase.js`. The app connects to the existing project by default — no additional setup needed to run against the live database.
-
-If you want to point to your own Supabase project, update `SUPABASE_URL` and `SUPABASE_ANON` in `supabase.js` and run the migrations from the project's database schema.
-
-### Building for distribution
+**Distributing a build via EAS:**
 
 ```bash
 npm install -g eas-cli
@@ -264,42 +31,282 @@ eas login
 eas update --auto
 ```
 
-Share the EAS update URL with testers — they open it in Expo Go directly.
+Share the resulting EAS update URL. Testers open it directly in Expo Go.
 
 ---
 
-## Team
+## Motivation
 
-Built with care by three Stanford students for CS278.
+Mainstream place-discovery platforms optimize for volume and engagement. The result is thousands of anonymous reviews that are difficult to contextualize and easy to game. In practice, people rely on a much smaller and more trusted signal: a recommendation from a friend, a roommate, a professor, or someone whose judgment they have tested over time.
 
-| | Name | |
-|---|---|---|
-| | **Eva Wanek** | [GitHub](#) |
-| | **Gil Silva** | [GitHub](#) |
-| | **Yujen Lin** | [GitHub](#) |
+Gem is built around that observation. Every pin in Gem is a personal recommendation attached to a real person whose profile, taste tags, and history are visible. The social graph is not decorative. It determines what appears in your feed and shapes every discovery experience in the app.
 
 ---
 
-## What's next
+## Features
 
-A few ideas we didn't have time for but think about:
+### Feed and Discovery
 
-**Mutual recommendations.** Surfacing gems from friends-of-friends when someone you follow saves a place — a soft second-degree social proof signal.
+The Discover feed surfaces public gems from across the network, with a horizontally scrollable trending section at the top showing the most-saved places. Posts from accounts you follow display a "circle" badge, giving social context even in the global feed.
 
-**Collaborative collections.** Shared collections for trips, neighborhoods, or friend groups — a natural extension of the current collections model.
+Circle mode collapses the feed to gems authored exclusively by accounts you follow, reducing noise and foregrounding trusted recommendations. Both modes support category filters: Study Gems, Food Spots, Coffee Runs, Moments, Hidden Gems, and Late Night.
 
-**Place memories.** The ability to revisit a gem you've been to and add a note: *"went here, it lived up to it."* Turning recommendations into records.
+### Map View
 
-**Travel mode.** Temporarily expanding your map radius when you're somewhere new, and seeing who in your network has gems there.
+An interactive Google Maps view renders every gem as a color-coded, icon-labeled pin organized by category. Tapping a pin surfaces a slide-up preview sheet; a second tap navigates to the full gem detail. The map supports the same Circle mode filter as the feed and defaults to Stanford's campus. Custom map styles are applied for both light and dark themes.
 
-**Taste matching.** Finding accounts with overlapping taste tags to suggest new people to follow — interest graph meets place graph.
+### Creating a Gem
+
+The compose screen prompts for a place name, category, optional photo, and a personal note. The location picker queries the app's Supabase database first, then falls back to the OpenStreetMap Nominatim API for unrecognized locations, with a manual entry option as a final fallback. The onboarding flow explicitly models what a high-quality, specific gem looks like before a user posts for the first time.
+
+### Collections
+
+Users can organize saved gems into named collections such as "Study Spots" or "Late Night Eats." Each collection can be set to public, making it visible on the user's profile, or private. Collections are browsable in full through a dedicated detail screen and display live item counts.
+
+### Profiles
+
+Each profile includes a display name, a unique @handle, a bio, a taste tagline (a single sentence describing what the user values in a place), and up to eight free-form taste tags. These fields are designed to help other users evaluate whether a profile is worth following before committing to a follow relationship. Profiles also display follower and following counts, the user's gem count, public collections, and a preview of the user's latest gem.
+
+### Social Graph
+
+Following another user is a deliberate, consequential action. The set of accounts you follow directly controls what appears in Circle mode. The follow decision is supported by taste tags and taglines, which provide enough signal to assess taste alignment before following.
+
+### Saving and Bookmarking
+
+Any gem can be saved with a single tap. The save count on each gem is visible to all users, functioning as lightweight social proof. Gems can also be bookmarked into specific collections for later reference.
+
+### Comments and Replies
+
+Users can leave comments on any gem. Comments support one level of threaded replies. Comment likes are persisted to the database and displayed as counts. Users can delete their own comments and report others' comments through a structured report flow.
+
+### Reporting and Moderation
+
+Both gems and comments can be reported through a categorized report sheet (Spam, Inappropriate Content, Harassment, Misinformation, or Other). Reports are submitted to the Supabase database for team review. The reporting flow is introduced during onboarding, framing community moderation as a shared responsibility rather than a hidden safety valve.
+
+### Onboarding
+
+First-time users complete a seven-step interactive onboarding flow before reaching the app. The flow includes an interactive choice game that asks users to select which of two example gems is more useful, explicitly establishing quality norms before a user posts. Each user's onboarding completion is tracked per-account in AsyncStorage.
+
+### Language and Theme Support
+
+The app supports English and Spanish, switchable from Settings, with language preference persisted across sessions via AsyncStorage. Full light and dark theme support is implemented throughout, with custom map styles for each theme.
 
 ---
 
-<div align="center">
+## Screenshots
 
-*Made at Stanford · Spring 2026*
+**Feed, Map, and Settings**
 
-✦
+![Feed, Map, and Settings](docs/walkthrough-feed-map-settings.png)
 
-</div>
+**Compose, Collections, and Profile**
+
+![Compose, Collections, and Profile](docs/walkthrough-compose-collections-profile.png)
+
+**Onboarding Experience**
+
+![Onboarding Experience](docs/walkthrough-onboarding.png)
+
+**Reporting and Moderation**
+
+![Reporting and Moderation](docs/walkthrough-reporting.png)
+
+---
+
+## Technical Architecture
+
+### Frontend
+
+The client is a React Native application packaged with Expo SDK 54, targeting iOS and Android. Navigation is implemented with React Navigation using a bottom tab navigator for the two primary views (Discover and Map) nested inside a native stack for all modal-style screens. Theme state and the authenticated user object are managed at the root level in `App.js` and passed as props throughout the tree.
+
+The feed is rendered with a virtualized `FlatList`. Map markers use `React.memo` and carefully manage `tracksViewChanges` to avoid the rendering performance pitfall common in `react-native-maps` when custom marker content changes. Localization uses `i18next` and `react-i18next` with a custom AsyncStorage detector that persists the user's language choice across sessions.
+
+### Backend
+
+The backend is a Supabase project providing PostgreSQL, authentication, file storage, and a REST API. There is no intermediate server layer. The client communicates directly with Supabase through its JavaScript SDK.
+
+### Database
+
+The core schema includes the following tables:
+
+| Table | Purpose |
+|---|---|
+| `profiles` | Extended user data: handle, bio, taste tagline, taste tags, avatar |
+| `gems` | User-created place recommendations |
+| `places` | Geocoded location data (name, city, latitude, longitude) |
+| `gem_images` | Ordered photo attachments stored in Supabase Storage |
+| `comments` | Comments with optional `parent_comment_id` for one-level threading |
+| `comment_likes` | Per-user comment likes with composite primary key |
+| `saves` | Many-to-many relationship between users and gems |
+| `collections` | Named, visibility-controlled sets of saved gems |
+| `collection_gems` | Junction table linking collections to gems |
+| `follows` | Directed follow graph between users |
+| `reports` | Structured reports on gems and comments |
+
+Row Level Security is enabled on all tables. Policies enforce ownership on all write operations: for example, gems can only be deleted where `auth.uid() = author_id`, and follows can only be created or deleted where `auth.uid() = follower_id`.
+
+The feed is generated by a PostgreSQL stored procedure, `get_feed(p_limit, p_offset)`, called via Supabase RPC. The function joins `gems`, `places`, `gem_images`, `profiles`, and `saves` in a single query and injects `is_saved` and `save_count` fields computed from the calling user's identity via `auth.uid()`. This avoids multiple round-trip queries from the client to assemble the feed.
+
+### Authentication
+
+Authentication uses Supabase's Google OAuth implicit flow, opened in an in-app browser via `expo-web-browser`. A deep-link handler in `App.js` parses the token hash fragment returned to the custom URI scheme on Android, where Chrome Custom Tabs cannot reliably detect scheme redirects. Sessions are persisted to AsyncStorage and automatically refreshed by the Supabase client.
+
+### Storage
+
+User-uploaded gem photos are stored in a Supabase Storage bucket (`gem-images`). The client uploads images using `expo-image-picker` and stores the resulting storage path in the `gem_images` table. Public URLs are resolved on the client at render time.
+
+### Maps and Place Search
+
+Map rendering uses `react-native-maps` with the Google Maps provider and custom-styled tile configurations for light and dark modes. Place search during gem creation queries the Supabase database first for previously entered locations, then falls back to the OpenStreetMap Nominatim API, which requires no paid API key.
+
+### Collections and Feed Architecture
+
+Collection item counts are maintained as a denormalized `item_count` column on the `collections` table, recalculated from the true `collection_gems` row count after each save or remove operation to prevent drift. The social feed is filtered client-side between Discover and Circle modes using a `Set` of following IDs fetched alongside the feed data, avoiding an additional query on mode switch.
+
+---
+
+## Social Computing Concepts
+
+Gem draws on three core theories from CS278: Social Computing. These concepts shaped both how the system was designed and what behaviors we expected to see.
+
+### Social Proof and the Cold Start Problem
+
+One of the central challenges for any new social platform is establishing a sense of activity before a large user base exists. Drawing on social proof theory, we recognized that users are significantly more likely to participate when they perceive an existing, active community. An empty feed provides no signal that the platform is worth engaging with.
+
+To address this, we prepopulated the platform with posts from the development team before opening it to participants. Our hypothesis was that users would be more willing to contribute and return if they could see that others had already done so, particularly people within their network. The global feed was designed for this early stage specifically: rather than showing only posts from followed accounts, it surfaces all public gems, making the platform feel active even with a small user base. A circle-based feed, while preferable at scale, would have appeared empty to new users and discouraged initial engagement.
+
+### Weak Ties and Strong Ties
+
+Gem is designed to operate at the boundary between weak and strong ties. The platform surfaces recommendations from a broad social network rather than requiring close friendships as a prerequisite for meaningful discovery. A user does not need a deeply formed relationship with someone to benefit from their gem posts.
+
+The intended use pattern is to leverage weak ties for place discovery and use that discovery as a bridge toward stronger social interaction. Finding a place through a loose connection can prompt a conversation, lead to making plans with a closer friend, or open a new interaction with the person who posted. Gem does not aim to replace strong-tie relationships but to use the wider network as a source of inspiration that flows into those closer connections. The follow graph and taste tags support this by giving users enough signal to determine whether a connection is worth engaging with, even without a prior relationship.
+
+### Injunctive Norms and User-Based Moderation
+
+To maintain a useful and respectful community, Gem introduces norms early and makes them persistent. Rather than relying on descriptive norms (what most people do) alone, we focused on injunctive norms (what the community considers appropriate behavior) established at the point of first use.
+
+The seven-step onboarding flow explicitly models what a good gem looks like. It includes examples of low-quality posts alongside higher-quality ones and uses an interactive choice exercise to make the distinction concrete before a user posts for the first time. The community guidelines remain accessible from the Settings screen, so the reference point is never buried. For enforcement, the platform uses user-based moderation: any gem or comment can be reported through a structured flow with five categories. Reports are reviewed directly by the development team. This combination of early norm-setting, accessible guidelines, and crowdsourced reporting was our approach to building a culture of contribution quality without requiring automated moderation infrastructure.
+
+---
+
+## Project Structure
+
+```
+gem/
+├── App.js                       # Auth listener, onboarding gate, navigation root
+├── supabase.js                  # Supabase client configuration
+├── constants.js                 # Categories, theme tokens, map styles
+│
+├── screens/
+│   ├── Login.js                 # Google sign-in and guest demo mode
+│   ├── OnboardingScreen.js      # Seven-step interactive onboarding
+│   ├── FeedView.js              # Discover and Circle feed with trending strip
+│   ├── MapView.js               # Interactive map with category pins
+│   ├── AddPin.js                # Gem compose screen
+│   ├── PinDetail.js             # Full gem detail view
+│   ├── PostComments.js          # Threaded comment screen
+│   ├── Profile.js               # User profile, collections, follow graph
+│   ├── Search.js                # Search across gems and users
+│   ├── CollectionDetail.js      # Collection contents view
+│   ├── Settings.js              # Language, theme, and account settings
+│   └── CommunityGuide.js        # Community guidelines
+│
+├── components/
+│   ├── SaveToCollectionModal.js  # Collection save bottom sheet
+│   └── ReportModal.js            # Report bottom sheet for gems and comments
+│
+├── services/
+│   ├── places.js                # Nominatim and Supabase place search
+│   └── share.js                 # Native share sheet integration
+│
+├── localization/
+│   ├── i18n.js                  # i18next initialization
+│   └── translations/
+│       ├── en.json
+│       └── es.json
+│
+└── assets/
+    ├── logo.png
+    ├── icon.png
+    ├── adaptive-icon.png
+    └── splash-icon.png
+```
+
+---
+
+## Meet the Team
+
+### Eva Wanek
+
+Electrical Engineering / Computer Science, Class of 2027, Stanford University
+
+[evawanek@stanford.edu](mailto:evawanek@stanford.edu) · [LinkedIn](https://www.linkedin.com/in/evawanek/) · [GitHub](https://github.com/Evamwanek)
+
+---
+
+### Gil Silva
+
+Symbolic Systems (HCI), Class of 2027, Stanford University
+
+[gilsilva@stanford.edu](mailto:gilsilva@stanford.edu) · [LinkedIn](https://www.linkedin.com/in/gilxsilva/) · [GitHub](https://github.com/gilxsilva)
+
+---
+
+### Yujen Lin
+
+Symbolic Systems, Class of 2027, Stanford University
+
+[ylin13@stanford.edu](mailto:ylin13@stanford.edu) · [LinkedIn](https://www.linkedin.com/in/yujen-lin-766853292/) · [GitHub](https://github.com/yujeneee)
+
+---
+
+## Future Work
+
+Several directions emerged during the project that were not implemented within the course timeline.
+
+**Second-degree recommendations.** When a user you follow saves a gem, that action could surface the gem to their followers as a soft signal. This would extend trust propagation one step beyond the direct follow relationship.
+
+**Collaborative collections.** Collections could be opened to multiple contributors, enabling shared curation for trips, neighborhoods, or recurring group contexts such as weekly study sessions.
+
+**Place memories.** After visiting a gem, a user could attach a follow-up note recording whether the experience matched the recommendation. This would transform Gem from a recommendation layer into a personal place journal.
+
+**Travel mode.** A temporary radius expansion when a user is in an unfamiliar location would surface gems from their network in that area, extending the trust graph to places they do not frequently visit.
+
+**Taste-based discovery.** Overlapping taste tags between profiles could power a recommendation system that suggests accounts to follow, connecting the interest graph to the place graph.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | React Native, Expo SDK 54 |
+| Navigation | React Navigation (Native Stack, Bottom Tabs) |
+| Backend | Supabase (PostgreSQL, Row-Level Security) |
+| Authentication | Supabase Auth, Google OAuth (implicit flow) |
+| Database queries | Supabase JS client, custom `get_feed` RPC |
+| Storage | Supabase Storage |
+| Maps | Google Maps via `react-native-maps` |
+| Place search | OpenStreetMap / Nominatim |
+| Icons | Ionicons via `@expo/vector-icons` |
+| Localization | i18next, react-i18next |
+| Session persistence | AsyncStorage |
+| Image selection | expo-image-picker |
+| OAuth browser | expo-web-browser, expo-linking |
+| Build and distribution | EAS (Expo Application Services) |
+
+---
+
+## Acknowledgements
+
+This project was developed for CS278: Social Computing at Stanford University. We are grateful to the CS278 course staff for their guidance throughout the quarter.
+
+The following open-source projects and platforms made Gem possible:
+
+- [Supabase](https://supabase.com) for the backend infrastructure
+- [Expo](https://expo.dev) for the mobile development framework and distribution tooling
+- [OpenStreetMap](https://www.openstreetmap.org) and the Nominatim geocoding service for location search
+
+---
+
+*CS278: Social Computing, Stanford University, Spring 2026 — [cs278.stanford.edu](https://cs278.stanford.edu)*
