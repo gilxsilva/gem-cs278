@@ -6,6 +6,8 @@ GEM is a social mobile application for discovering and sharing meaningful places
 
 Built for CS278: Social Computing, Stanford University, Spring 2026.
 
+[Final Writeup](https://drive.google.com/file/d/13KFgOR20EJ7Jqfyl4UkKwaASGj4tikIS/view)
+
 ---
 
 ## Quick Start
